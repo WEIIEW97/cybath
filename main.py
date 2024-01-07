@@ -1,8 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import distance
 import heapq
 import random
+
+from scipy.spatial import distance
+from scipy.ndimage import binary_dilation
+from queue import Queue
+
+DIST_PER_GRID = 5
 
 
 def read_pgm(path):
@@ -120,6 +125,198 @@ def rrt(obstacle_map, start, goal, clearance, max_iterations=10000):
     return tree, None  # Path not found
 
 
+def wavefront_exploration(start, map):
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    height, width = map.shape
+    visited = np.zeros_like(map, dtype=bool)
+    path_map = np.full_like(map, -1, dtype=int)
+    q = Queue()
+    q.put(start)
+    path_map[start] = 0
+
+    safe_walkable_area = get_safe_area(16, map)
+
+    while not q.empty():
+        x, y = q.get()
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+
+            if (
+                0 <= nx < height
+                and 0 <= ny < width
+                and safe_walkable_area[nx, ny]
+                and not visited[nx, ny]
+            ):
+                visited[nx, ny] = True
+                path_map[nx, ny] = path_map[x, y] + 1
+                q.put((nx, ny))
+
+    return path_map
+
+
+def is_safe(point, map, safe_dist=3):
+    x, y = point
+    height, width = map.shape
+    return (
+        0 <= x < height
+        and 0 <= y < width
+        and map[x, y]
+        and all(
+            map[
+                max(0, x - dx) : min(height, x + dx + 1),
+                max(0, y - dy) : min(width, y + dy + 1),
+            ].all()
+            for dx in range(safe_dist)
+            for dy in range(safe_dist)
+        )
+    )
+
+
+def rrtm(start, map, iterations=10000, step_size=1):
+    height, width = map.shape
+    tree = {start: None}
+    visited = np.zeros_like(map, dtype=bool)
+    path_map = np.full_like(map, -1, dtype=int)
+    q = Queue()
+    q.put(start)
+    path_map[start] = 0
+
+    safe_walkable_area = get_safe_area(16, map)
+
+    for _ in range(iterations):
+        rand_point = (random.randint(0, height - 1), random.randint(0, width - 1))
+
+        nearest_point = min(
+            tree,
+            key=lambda p: (p[0] - rand_point[0]) ** 2 + (p[1] - rand_point[1]) ** 2,
+        )
+
+        dx = rand_point[0] - nearest_point[0]
+        dy = rand_point[1] - nearest_point[1]
+        x, y = rand_point[0], rand_point[1]
+        nx, ny = nearest_point[0], nearest_point[1]
+        if (
+            0 <= nx < height
+            and 0 <= ny < width
+            and safe_walkable_area[nx, ny]
+            and not visited[nx, ny]
+        ):
+            visited[nx, ny] = True
+            path_map[nx, ny] = path_map[x, y] + 1
+            q.put((nx, ny))
+
+        dist = max((dx**2 + dy**2) ** 0.5, 1)
+        new_point = (
+            int(nearest_point[0] + step_size * dx / dist),
+            int(nearest_point[1] + step_size * dy / dist),
+        )
+
+        if is_safe(new_point, map):
+            tree[new_point] = nearest_point
+
+            if (
+                new_point[0] == 0
+                or new_point[0] == height - 1
+                or new_point[1] == 0
+                or new_point[1] == width - 1
+            ):
+                return tree, new_point
+
+    return tree, None
+
+
+def rrtm_star(start, map, iterations=1000, step_size=5, safe_dist=3, radius=10):
+    height, width = map.shape
+    tree = {start: (None, 0)}
+
+    for _ in range(iterations):
+        rand_point = (random.randint(0, height - 1), random.randint(0, width - 1))
+
+        nearest_point = min(
+            tree,
+            key=lambda p: (p[0] - rand_point[0]) ** 2 + (p[1] - rand_point[1]) ** 2,
+        )
+        dx = rand_point[0] - nearest_point[0]
+        dy = rand_point[1] - nearest_point[1]
+        dist = max((dx**2 + dy**2) ** 0.5, 1)
+        new_point = (
+            int(nearest_point[0] + step_size * dx / dist),
+            int(nearest_point[1] + step_size * dy / dist),
+        )
+
+        if not is_safe(new_point, map, safe_dist=safe_dist):
+            continue
+
+        min_dist = tree[nearest_point][1] + step_size
+        min_parent = nearest_point
+        for pt in tree:
+            if (
+                (pt[0] - new_point[0]) ** 2 + (pt[1] - new_point[1]) ** 2
+            ) ** 0.5 <= radius:
+                pt_dist = (
+                    tree[pt][1]
+                    + ((pt[0] - new_point[0]) ** 2 + (pt[1] - new_point[1]) ** 2) ** 0.5
+                )
+                if pt_dist < min_dist:
+                    min_dist = pt_dist
+                    min_parent = pt
+
+        tree[new_point] = (min_parent, min_dist)
+
+        if (
+            new_point[0] == 0
+            or new_point[0] == height - 1
+            or new_point[1] == 0
+            or new_point[1] == width - 1
+        ):
+            return tree, new_point
+
+    return tree, None
+
+
+def get_safe_area(clearance, grip_map, walkable_thr=254):
+    clear_iter = int(clearance / DIST_PER_GRID)
+    walkable_area = grip_map == walkable_thr
+    obstacle_area = np.logical_not(walkable_area)
+
+    safe_area = np.logical_not(binary_dilation(obstacle_area, iterations=clear_iter))
+    return safe_area
+
+
 if __name__ == "__main__":
-    path = "/home/william/data/cybathlon/test.pgm"
+    path = "test.pgm"
     mat = read_pgm(path)
+    # Define start and goal points
+    start_point_updated = (135, 31)  # y, x as numpy arrays are row-major
+    goal_point_updated = (42, 34)  # y, x
+    walkable_map = np.where(mat == 254, 1, 0)
+    clearance_required = 3  # 16 pixels clearance
+    # Apply RRT algorithm
+    tree, last_point = rrt(
+        walkable_map, start_point_updated, goal_point_updated, clearance_required
+    )
+
+    # Visualize the result
+    plt.imshow(walkable_map, cmap="gray")
+    tree_y, tree_x = zip(*tree)
+    plt.plot(tree_x, tree_y, marker=".", color="red", markersize=2, linestyle="None")
+    plt.scatter(
+        [start_point_updated[1], goal_point_updated[1]],
+        [start_point_updated[0], goal_point_updated[0]],
+        color="blue",
+    )
+
+    if last_point:
+        plt.plot(
+            [last_point[1], goal_point_updated[1]],
+            [last_point[0], goal_point_updated[0]],
+            color="green",
+            linewidth=2,
+        )
+
+    plt.title("RRT Path Planning")
+    plt.show()
+
+    # Indicate if the path to the goal was found
+    path_found = "Path to goal found." if last_point else "Path to goal not found."
+    print(path_found)
