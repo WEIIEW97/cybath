@@ -25,18 +25,16 @@ class ConnectedComponent {
 public:
   int thr_ = 0;
   cv::Mat walkable_area_;
+  cv::Mat img_;
 
 public:
   explicit ConnectedComponent(const cv::Mat& img, int thr) {
     cv::flip(img, img_, 0);
     thr_ = thr;
   }
-  void preprocess(int kernel_size);
+  void cross_rectangle_conv(int kernel_size);
   void set_threshold(int thr);
   cv::Mat find_largest_connected_component();
-
-private:
-  cv::Mat img_;
 };
 
 #endif // FIND_LANDMARK_CONNECTED_COMPONENT_H

@@ -17,9 +17,37 @@
 #ifndef FIND_LANDMARK_WAVEFRONT_H
 #define FIND_LANDMARK_WAVEFRONT_H
 
-#include <Eigen/Dense>
-#include "utils.h"
+#include <opencv2/opencv.hpp>
+#include <utility>
+#include <vector>
 
-Eigen::MatrixXi wfd(vector<int> start, Eigen::MatrixXi map);
+using std::vector;
+
+struct WaveFrontDirection {
+  WaveFrontDirection() = default;
+  vector<vector<int>> way4 = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+  vector<vector<int>> way8 = {{0, 1}, {1, 0},  {0, -1}, {-1, 0},
+                              {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+  vector<vector<int>> way6 = {{0, 1},  {1, 0}, {0, -1},
+                              {-1, 0}, {1, 1}, {1, -1}};
+};
+
+class WaveFront {
+public:
+  cv::Mat img_;
+  cv::Point start_point_;
+  int thr_;
+  cv::Mat walkable_area_;
+
+public:
+  WaveFront(const cv::Mat& img, cv::Point start_point, int thr) {
+    cv::flip(img, img_, 0);
+    start_point_ = std::move(start_point);
+    thr_ = thr;
+  }
+  void cross_rectangle_conv(int kernel_size);
+  cv::Mat explore(const vector<vector<int>>& direction, int kernel_size);
+  cv::Point find_most_likely_exit_point(const cv::Mat& path_map);
+};
 
 #endif // FIND_LANDMARK_WAVEFRONT_H

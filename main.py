@@ -153,6 +153,18 @@ def rrt(obstacle_map, start, goal, clearance, max_iterations=10000):
     return tree, None  # Path not found
 
 
+def cross_rectangle_conv(kernel_size, map):
+    h_kernel = np.ones((1, kernel_size), dtype=np.float32)
+    v_kernel = h_kernel.T
+
+    hconv = convolve2d(map, h_kernel, mode='same', boundary='symm')
+    hconv = hconv == kernel_size
+    vconv = convolve2d(map, v_kernel, mode='same', boundary='symm')
+    vconv = vconv == kernel_size
+
+    return hconv * vconv
+
+
 def wavefront_exploration(start, map):
     directions4 = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     directions8 = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
@@ -164,7 +176,8 @@ def wavefront_exploration(start, map):
     q.put(start)
     path_map[start] = 0
 
-    safe_walkable_area = get_safe_area(30, map)
+    # safe_walkable_area = get_safe_area(30, map)
+    safe_walkable_area = cross_rectangle_conv(15, map)
 
     while not q.empty():
         x, y = q.get()
@@ -290,9 +303,9 @@ def rrt_star(start, map, iterations=1000, step_size=5, safe_dist=3, radius=10):
     return tree, None
 
 
-def get_safe_area(clearance, grip_map, walkable_thr=254):
+def get_safe_area(clearance, grid_map, walkable_thr=254):
     clear_iter = int(clearance / DIST_PER_GRID)
-    walkable_area = grip_map == walkable_thr
+    walkable_area = grid_map == walkable_thr
     obstacle_area = np.logical_not(walkable_area)
 
     safe_area = np.logical_not(binary_dilation(obstacle_area, iterations=clear_iter))
@@ -309,16 +322,17 @@ def sconv(grip_map, walkable_thr=254):
 if __name__ == "__main__":
     path = "test.pgm"
     mat = read_pgm(path)
-    # mat = mat[60:-1, :]
+    mat = np.flipud(mat)
 
+    # mat = mat[:65, :]
     # conv_res = sconv(mat)
     # plt.figure()
     # plt.imshow(conv_res)
     # plt.show()
 
     # Define start and goal points
-    start_point_updated = (135, 31)  # y, x as numpy arrays are row-major
-    goal_point_updated = (42, 34)  # y, x
+    start_point_updated = (5, 31)  # y, x as numpy arrays are row-major
+    # goal_point_updated = (42, 34)  # y, x
     walkable_map = np.where(mat == 254, 1, 0)
     clearance_required = 3  # 16 pixels clearance
     # Apply RRT algorithm
@@ -353,7 +367,7 @@ if __name__ == "__main__":
 
 
 
-    wave_path = wavefront_exploration(start_point_updated, mat)
+    wave_path = wavefront_exploration(start_point_updated, walkable_map)
     loc = np.where(wave_path == wave_path.max())
     print(loc)
     plt.figure()

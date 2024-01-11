@@ -18,7 +18,7 @@
 
 void ConnectedComponent::set_threshold(int thr) { thr_ = thr; }
 
-void ConnectedComponent::preprocess(int kernel_size) {
+void ConnectedComponent::cross_rectangle_conv(int kernel_size) {
   cv::Mat kernel = cv::Mat::ones(1, kernel_size, CV_32FC1);
   cv::Mat mask = img_ >= thr_;
   mask.convertTo(mask, CV_32F);
@@ -42,9 +42,9 @@ cv::Mat ConnectedComponent::find_largest_connected_component() {
   // find the largest connected component
   std::vector<int> area(num_labels, 0);
   for (int i = 0; i < cc.rows; ++i) {
+    auto label_ptr = cc.ptr<int>(i);
     for (int j = 0; j < cc.cols; ++j) {
-      auto label = cc.at<int>(i, j);
-      area[label]++;
+      area[label_ptr[j]]++;
     }
   }
 
@@ -53,9 +53,11 @@ cv::Mat ConnectedComponent::find_largest_connected_component() {
 
   cv::Mat largest_component = cv::Mat::zeros(img_.size(), CV_8U);
   for (int i = 0; i < cc.rows; i++) {
+    auto cc_ptr = cc.ptr<int>(i);
+    auto lc_ptr = largest_component.ptr<uint8_t>(i);
     for (int j = 0; j < cc.cols; j++) {
-      if (cc.at<int>(i, j) == largest_label) {
-        largest_component.at<uint8_t>(i, j) = 255;
+      if (cc_ptr[j] == largest_label) {
+        lc_ptr[j] = 255;
       }
     }
   }
