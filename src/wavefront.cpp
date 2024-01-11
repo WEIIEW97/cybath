@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "wavefront.h"
-#include <queue>
+#include <deque>
 
 void WaveFront::cross_rectangle_conv(int kernel_size) {
   cv::Mat kernel = cv::Mat::ones(1, kernel_size, CV_32FC1);
@@ -40,13 +40,13 @@ cv::Mat WaveFront::explore(const vector<vector<int>>& direction,
   walkable_area_.convertTo(walkable_area_, CV_32S);
   cv::Mat visited = cv::Mat::zeros(h, w, CV_32S);
   cv::Mat path_map = cv::Mat::ones(h, w, CV_32S) * -1;
-  std::queue<cv::Point> q;
-  q.push(start_point_);
+  std::deque<cv::Point> q;
+  q.push_back(start_point_);
   path_map.at<int>(start_point_.y, start_point_.x) = 0;
 
   while (!q.empty()) {
     auto [x, y] = q.front();
-    q.pop();
+    q.pop_front();
     for (auto& D : direction) {
       int dy = D[0];
       int dx = D[1];
@@ -56,7 +56,7 @@ cv::Mat WaveFront::explore(const vector<vector<int>>& direction,
           walkable_area_.at<int>(ny, nx) == 1 && !visited.at<int>(ny, nx)) {
         visited.at<int>(ny, nx) = 1;
         path_map.at<int>(ny, nx) = path_map.at<int>(y, x) + 1;
-        q.emplace(nx, ny);
+        q.emplace_back(nx, ny);
       }
     }
   }
