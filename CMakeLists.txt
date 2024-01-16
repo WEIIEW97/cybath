@@ -9,6 +9,7 @@ file(GLOB headers ${CMAKE_CURRENT_LIST_DIR}/src/*.h)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
+#find_package(Boost REQUIRED COMPONENTS graph)
 find_package(OpenMP)
 
 
@@ -29,6 +30,7 @@ target_include_directories(
         PRIVATE
         ${OpenCV_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
+#        ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(
