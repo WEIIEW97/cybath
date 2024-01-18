@@ -56,6 +56,13 @@ def fit_rectangle(corners):
     return virtual_c, unit_w_side_p
 
 
+def calcualte_theta(unit_v):
+    x_axis = np.array([0, 1])
+    theta = np.arccos((unit_v@x_axis) / (np.linalg.norm(unit_v)*np.linalg.norm(x_axis)))
+    return theta
+
+
+
 if __name__ == "__main__":
     # test_img = cv2.imread(
     #     "/home/william/Codes/find-landmark/data/start_line/fake/start_0001.jpg",
@@ -69,6 +76,7 @@ if __name__ == "__main__":
         res = get_rectangle_vertices_simple(test_img)
         # print(res)
         c, unit_v = fit_rectangle(res)
+        
         end_point = unit_v * 200
 
         img_copy = cv2.cvtColor(test_img, cv2.COLOR_GRAY2BGR)
@@ -79,6 +87,12 @@ if __name__ == "__main__":
         cv2.circle(img_copy, (int(c[1]), int(c[0])), 1, (0, 0, 255), 1)
         cv2.line(img_copy, (int(c[1]), int(c[0])), (int(c[1] + end_point[1]), int(c[0] + end_point[0])), (128, 127, 255), 1)
         cv2.imshow(f"vertex_{i}", img_copy)
+        print(f">>> showing {i}th image.")
+        print(f">>> unit vector is {unit_v}")
+        theta = calcualte_theta(unit_v)
+        print(f"theta is {theta} radians.")
+        angle = np.degrees(theta)
+        print(f"angle is {angle} degrees.")
         i+=1
     cv2.waitKey(0)
     cv2.destroyAllWindows()
