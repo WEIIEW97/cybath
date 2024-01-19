@@ -1,0 +1,5 @@
+mkdir -p build
+cd build
+
+cmake .. -DONNXRUNTIME_ROOTDIR=path_of_onnxruntime-linux-x64-gpu-1.16.3
+make -j4
