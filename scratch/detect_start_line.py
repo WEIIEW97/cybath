@@ -75,7 +75,7 @@ def fit_rectangle(corners):
         v3 = c - d
         v4 = a - c
     else:
-        raise ValueError("Cannot detect for vertices.")
+        raise ValueError("Cannot detect four vertices.")
 
     # norm_v1 = np.linalg.norm(v1)
     # norm_v2 = np.linalg.norm(v2)

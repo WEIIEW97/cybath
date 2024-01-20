@@ -22,7 +22,7 @@ int main(int, char**) {
   //    cv::imshow("end point", pgm_flip);
   //    cv::waitKey(0);
   //    cv::destroyAllWindows();
-  string rootdir = "/home/william/Codes/find-landmark/data/start_line/fake";
+  string rootdir = "/home/william/codes/find-landmark/data/start_line/fake";
   vector<string> all_file_names;
 
   for (const auto& f : fs::directory_iterator(rootdir)) {
@@ -41,7 +41,8 @@ int main(int, char**) {
     }
     cout << endl;
     cv::Point2f c, unit_v;
-    fit_rectangle(res, c, unit_v);
+    PositionFlag flag;
+    fit_rectangle(res, c, unit_v, flag);
 
     cout << "center is: " << c << endl;
 
@@ -67,6 +68,7 @@ int main(int, char**) {
     auto theta = calculate_theta(unit_v, v2);
     cout << ">>> theta is: " << theta << endl;
     cout << ">>> angle is: " << rad2deg(theta) << endl;
+    cout << ">>> direction flag is: " << flag << endl;
     i++;
   }
   cv::waitKey(0);

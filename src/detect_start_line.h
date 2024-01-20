@@ -18,12 +18,20 @@
 #define FIND_LANDMARK_DETECT_START_LINE_H
 
 #include <opencv2/opencv.hpp>
+#include <vector>
 
-inline float rad2deg(float theta) {
-  return theta * 180.0f / M_PI;
-}
+enum PositionFlag {
+  error = 0,
+  turn_left = 1,
+  turn_right = 2,
+};
+
+inline float rad2deg(float theta) { return theta * 180.0f / M_PI; }
 std::vector<cv::Point> get_rectangle_vertices(const cv::Mat& mask);
-void fit_rectangle(std::vector<cv::Point>& corners, cv::Point2f& virtual_c, cv::Point2f& unit_w_side_p);
+PositionFlag distinguish_position(const cv::Point& a, const cv::Point& b,
+                                  const cv::Point& c, const cv::Point& d);
+void fit_rectangle(std::vector<cv::Point>& corners, cv::Point2f& virtual_c,
+                   cv::Point2f& unit_w_side_p, PositionFlag& flag);
 float calculate_theta(const cv::Point2f& unit_v, const cv::Point2f& v2);
 
 #endif // FIND_LANDMARK_DETECT_START_LINE_H
