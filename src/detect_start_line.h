@@ -21,7 +21,8 @@
 #include <vector>
 
 enum PositionFlag {
-  error = 0,
+  error = -1,
+  align = 0,
   turn_left = 1,
   turn_right = 2,
 };
