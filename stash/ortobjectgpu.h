@@ -3,15 +3,15 @@
 
 class ortObjectGPU {
 
+public:
+  ortObjectGPU();
 
-    public:
-        ortObjectGPU();
+  ~ortObjectGPU();
 
-        ~ortObjectGPU();
+  int findChair(cv::Mat src, bool available[6], bool& hasCabinet,
+                std::vector<int>& position, std::string imageName = "nvp.jpg");
 
-        int findChair(cv::Mat src, bool available[6], bool& hasCabinet, std::vector<int>& position, std::string imageName = "nvp.jpg");
-    
-    private:
-        OnnxRuntimeEngine* ortengine_coco;
-        OnnxRuntimeEngine* ortengine_furn;
+private:
+  OnnxRuntimeEngine* ortengine_coco;
+  OnnxRuntimeEngine* ortengine_furn;
 };
