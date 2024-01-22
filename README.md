@@ -1,1 +1,3 @@
-Find possibe landmarks(temperal end points) and path planning(avoiding obstacles) in real-time.
+# CYBATHLON 2024
+
+Source codes for https://cybathlon.ethz.ch/en/events/edition/cybathlon-2024.

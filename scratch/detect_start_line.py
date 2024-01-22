@@ -105,7 +105,7 @@ def calculate_theta(unit_v, v2):
 
 if __name__ == "__main__":
     test_img = cv2.imread(
-        "/home/william/Codes/find-landmark/data/start_line/fake/start_0004.jpg",
+        "/home/william/Codes/cybath/data/start_line/fake/start_0004.jpg",
         cv2.IMREAD_GRAYSCALE,
     )
     res = get_rectangle_vertices_simple(test_img)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     print(f"theta is {theta} radians.")
     angle = np.degrees(theta)
     print(f"angle is {angle} degrees.")
-    # basedir = "/home/william/Codes/find-landmark/data/start_line/fake"
+    # basedir = "/home/william/Codes/cybath/data/start_line/fake"
     # all_file_names = [f for f in os.listdir(basedir)]
     # i = 1
 

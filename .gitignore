@@ -5,3 +5,6 @@ cmake-build-release
 .cache
 .vscode
 .idea
+
+models
+onnxruntime-linux-x64-gpu-1.16.3/lib

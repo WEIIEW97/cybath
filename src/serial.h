@@ -16,18 +16,26 @@
 
 #pragma once
 
-#include "detect_start_line.h"
-#include "../cnnseg/ortpathseggpu.h"
-
-#define C_EXPORT
+#include "startline/detect_start_line.h"
+#include "cnnseg/ortpathseggpu.h"
+#include <memory>
 
 struct SIG {
   float angle = -1.0f;
   PositionFlag sign = PositionFlag::error;
 };
 
-C_EXPORT ortPathSegGPU* initialize_gpu();
-C_EXPORT SIG serial_start_line_detect(const cv::Mat& frame,
-                                      ortPathSegGPU* stream);
-C_EXPORT bool whether_to_begin_construction(const SIG& signal);
-C_EXPORT void delete_gpu(ortPathSegGPU* GPU);
+struct MultiLabelMaskSet {
+  cv::Mat global_start_end_lane;
+  cv::Mat border_lane;
+  cv::Mat shape_v_lane;
+  cv::Mat gap_lane;
+  cv::Mat road_lane;
+};
+
+ortPathSegGPU* initialize_gpu();
+std::shared_ptr<MultiLabelMaskSet>
+get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result);
+SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
+bool whether_to_begin_construction(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
+void delete_gpu(ortPathSegGPU* GPU);
