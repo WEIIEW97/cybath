@@ -33,6 +33,8 @@ if(HAVE_TENSORRT_PROVIDER_FACTORY_H)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAVE_TENSORRT_PROVIDER_FACTORY_H)
 endif()
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DDEBUG)
+
 target_include_directories(
         ${PROJECT_NAME}
         PRIVATE

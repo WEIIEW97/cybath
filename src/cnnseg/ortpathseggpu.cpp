@@ -100,7 +100,7 @@ int labelLineType(Mat& out_linemask, Mat& out_linetypemask) {
     vector<int> hull;
     convexHull(contours[i], hull, false, false);
 
-    // convexHull area
+    // convexHull are/home/nvp/codes/cybath-master/onnxruntime-linux-x64-gpu-1.16.3/liba
     vector<Point> points = contours[i];
     double convex_area = 0;
     for (int i = 0; i < hull.size(); i++) {
@@ -182,8 +182,8 @@ ortPathSegGPU::ortPathSegGPU() {
 
 #else
 ortPathSegGPU::ortPathSegGPU() {
-  const char* road_model_path = "models/end2end_ocrnet_road_border.onnx";
-  const char* line_model_path = "models/end2end_ocrnet_line.onnx";
+  const char* road_model_path = "/home/nvp/codes/cybath/models/end2end_ocrnet_road_border.onnx";
+  const char* line_model_path = "/home/nvp/codes/cybath/models/end2end_ocrnet_line.onnx";
 
   // initialize onnxruntime engine
   this->ortengine_road = new OnnxRuntimeEngine(road_model_path);

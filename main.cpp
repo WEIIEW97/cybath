@@ -9,18 +9,29 @@ using namespace std;
 namespace fs = std::filesystem;
 
 int main(int, char**) {
-  std::string root_path = "/home/william/extdisk/data/footpath_test3_data/statr_line_test";
-  std::string image_path = "/home/william/extdisk/data/footpath_test3_data/statr_line_test/1704955326.415914.png";
+  std::string root_path = "/home/nvp/data/VIS/footpath_test3_data/color";
+  std::string image_path = "/home/nvp/data/VIS/footpath_test3_data/color/1704955326.415914.png";
 
-  cv::Mat rgb = cv::imread(image_path);
 
   auto gpu_carrier = initialize_gpu();
-  cv::Mat path_seg = onnx_path_seg(rgb, gpu_carrier);
-  auto multi_masks = get_labeled_masks_from_onnx(path_seg);
+  int i = 0;
+  auto multi_label_masks = make_shared<MultiLabelMaskSet>();
+  for (const auto& entry : fs::directory_iterator(root_path)) {
+    auto image_name = entry.path();
+    auto full_path = root_path + "/" + std::string(image_name);
+    cout << full_path << "\n";
+  cv::Mat rgb = cv::imread(image_path);
 
-  auto start_line_flag = serial_start_line_detect(multi_masks);
-  cout << start_line_flag.angle << endl;
-  cout << start_line_flag.sign << endl;
+  cv::Mat path_seg = onnx_path_seg(rgb, gpu_carrier);
+  get_labeled_masks_from_onnx(path_seg, multi_label_masks);
+
+  auto start_line_flag = serial_start_line_detect(multi_label_masks);
+  cout << "begin frame: " << i << "\n";
+  cout << start_line_flag.angle << "\n";
+  cout << start_line_flag.sign << "\n";
+  cout << "=========================" << "\n";
+  i++;
+  }
 
   delete_gpu(gpu_carrier);
   return 0;

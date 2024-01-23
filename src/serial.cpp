@@ -32,9 +32,7 @@ cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream) {
   return onnx_seg;
 }
 
-std::shared_ptr<MultiLabelMaskSet>
-get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result) {
-  auto multi_label_masks = std::make_shared<MultiLabelMaskSet>();
+void get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result, std::shared_ptr<MultiLabelMaskSet>& multi_label_masks) {
 
   // split multi-labeled tasks into different masks;
   multi_label_masks->global_start_end_lane = (onnx_seg_result == 1 * LABEL_SCALAR);
@@ -48,12 +46,11 @@ get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result) {
   multi_label_masks->shape_v_lane *= 255;
   multi_label_masks->gap_lane *= 255;
   multi_label_masks->road_lane *= 255;
-  return multi_label_masks;
 }
 
 SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   auto vertices = get_rectangle_vertices(label_masks->global_start_end_lane);
-#if DEBUG
+#ifdef DEBUG
   std::cout << "vertices is: "
             << "\n";
   for (auto& p : vertices) {
@@ -65,12 +62,12 @@ SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_mas
   PositionFlag flag;
   fit_rectangle(vertices, c, unit_v, flag);
   cv::Point2f v2 = {-1, 0};
-#if DEBUG
+#ifdef DEBUG
   std::cout << "center is " << c << std::endl;
 #endif
   auto theta = calculate_theta(unit_v, v2);
   auto angle = rad2deg(theta);
-#if DEBUG
+#ifdef DEBUG
   std::cout << ">>> unit vector is:  " << unit_v << "\n";
   std::cout << ">>> theta is: " << theta << "\n";
   std::cout << ">>> angle is: " << angle << "\n";
