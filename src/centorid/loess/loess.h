@@ -30,8 +30,8 @@
 
 #include "Point.h"
 
-void loess(std::vector<Point>& inpoints,
-           const std::vector<Point>& outpoints,
+void loess(std::vector<LOESS::Point>& inpoints,
+           const std::vector<LOESS::Point>& outpoints,
            std::vector<double>& valsout,
            double span,
            size_t niter,

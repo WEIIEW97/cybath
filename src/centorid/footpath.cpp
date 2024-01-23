@@ -22,7 +22,7 @@
 #include <pcl/sample_consensus/sac_model_plane.h>
 
 #include "loess/loess.h"
-
+#include "detect_center_line.h"
 
 //cv::VideoWriter video_writer;
 
@@ -30,6 +30,7 @@ Footpath::Footpath(const cv::Matx33d& intrinsics,
                    const cv::Vec4d& distortion_coeffs,
                    float angel,
                    bool verbose)
+
     : intrinsics_(intrinsics),
       distortion_coeffs_(distortion_coeffs),
       angle_(angel),
@@ -331,25 +332,7 @@ std::vector<cv::Vec3d> Footpath::FollowPath(const cv::Mat& img_depth,
 
 std::vector<cv::Point2f> Footpath::RowSearchingReduceMethod(
     const cv::Mat& img_mask) {
-  std::vector<cv::Point2f> middle_lane_coords;
-  middle_lane_coords.reserve(img_mask.rows);
-
-#pragma omp parallel for
-  for (int i = img_mask.rows - 1; i >= 0; --i) {
-    auto row = img_mask.row(i);
-    auto count = cv::countNonZero(row);
-
-    if (count > 0) {
-      cv::Mat locations;
-      cv::findNonZero(row, locations);
-      double sum = std::accumulate(
-          locations.begin<cv::Point>(), locations.end<cv::Point>(), 0.0,
-          [](double s, const cv::Point& p) { return s + p.x; });
-      double mean = sum / count;
-      middle_lane_coords.emplace_back(static_cast<int>(mean), i);
-    }
-  }
-  return middle_lane_coords;
+  return row_searching_reduce_method(img_mask);
 }
 
 cv::Vec3f Footpath::GetIntersectPointFromLP(
@@ -366,12 +349,12 @@ cv::Vec3f Footpath::GetIntersectPointFromLP(
 
 void Footpath::Smooth(const std::vector<cv::Point2f>& input,
                       std::vector<cv::Point2f>& output) {
-  std::vector<Point> inpoints, outpoints;
+  std::vector<LOESS::Point> inpoints, outpoints;
   std::vector<double> valsout;
 
-  outpoints.resize(input.size(), Point(1, 0));
+  outpoints.resize(input.size(), LOESS::Point(1, 0));
   for (int i = 0; i < input.size(); ++i) {
-    Point tmp_point(1, 0);
+    LOESS::Point tmp_point(1, 0);
     tmp_point.val(input.at(i).x);
     tmp_point[0] = input.at(i).y;
     inpoints.push_back(tmp_point);

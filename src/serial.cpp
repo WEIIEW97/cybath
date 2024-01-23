@@ -17,8 +17,8 @@
 #include "serial.h"
 #define LABEL_SCALAR 50
 
-ortPathSegGPU* initialize_gpu() {
-  auto* ort_pathseg_gpu = new ortPathSegGPU();
+ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path, const std::string& line_onnx_model_path) {
+  auto* ort_pathseg_gpu = new ortPathSegGPU(road_onnx_model_path, line_onnx_model_path);
   return ort_pathseg_gpu;
 }
 
@@ -32,10 +32,13 @@ cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream) {
   return onnx_seg;
 }
 
-void get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result, std::shared_ptr<MultiLabelMaskSet>& multi_label_masks) {
+void get_labeled_masks_from_onnx(
+    const cv::Mat& onnx_seg_result,
+    std::shared_ptr<MultiLabelMaskSet>& multi_label_masks) {
 
   // split multi-labeled tasks into different masks;
-  multi_label_masks->global_start_end_lane = (onnx_seg_result == 1 * LABEL_SCALAR);
+  multi_label_masks->global_start_end_lane =
+      (onnx_seg_result == 1 * LABEL_SCALAR);
   multi_label_masks->border_lane = (onnx_seg_result == 2 * LABEL_SCALAR);
   multi_label_masks->shape_v_lane = (onnx_seg_result == 3 * LABEL_SCALAR);
   multi_label_masks->gap_lane = (onnx_seg_result == 4 * LABEL_SCALAR);
@@ -83,6 +86,27 @@ SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   start_line_signal.sign = flag;
   return start_line_signal;
 }
+
+std::vector<cv::Vec3d> serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks, const cv::Mat& correspond_depth) {
+  auto mask = label_masks->road_lane;
+  /// temporally set parameters to be fixed.
+  cv::Matx33d intrinsics{381.7600630735221, 0, 319.3731939266522,
+                         0, 381.9814634837562, 243.68503537756743,
+                         0, 0, 1};
+  cv::Vec4d distortion_coeffs{-0.04442904360733734,
+                              0.037326194718717384,
+                              7.758816931839537e-06,
+                              0.0005847117569966644};
+  float camera_angle = -70;
+  ///
+  Footpath footpath(intrinsics, distortion_coeffs, camera_angle, false);
+  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+
+  auto control_poses = footpath.FollowPath(correspond_depth, mask);
+  return control_poses;
+}
+
 
 bool whether_to_begin_construction(const SIG& signal) {
   return true ? (signal.angle < 1.0f) : false;

@@ -15,8 +15,8 @@
  */
 #include "detect_center_line.h"
 
-std::vector<cv::Point> row_searching_reduce_method(const cv::Mat& binary_mask) {
-  std::vector<cv::Point> middle_lane_coords;
+std::vector<cv::Point2f> row_searching_reduce_method(const cv::Mat& binary_mask) {
+  std::vector<cv::Point2f> middle_lane_coords;
   int h = binary_mask.rows;
 
   middle_lane_coords.reserve(h);
@@ -33,7 +33,7 @@ std::vector<cv::Point> row_searching_reduce_method(const cv::Mat& binary_mask) {
           locations.begin<cv::Point>(), locations.end<cv::Point>(), 0.0,
           [](double s, const cv::Point& p) { return s + p.x; });
       double mean = sum / count;
-      middle_lane_coords.emplace_back(static_cast<int>(mean), i);
+      middle_lane_coords.emplace_back(mean, i);
     }
   }
   return middle_lane_coords;

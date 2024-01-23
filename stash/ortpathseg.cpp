@@ -67,8 +67,6 @@ void padding_resize(cv::InputArray& src, cv::OutputArray& dst, float& fratio,
   // padd_w = padd_w / 2;
   // padd_h = padd_h / 2;
   cout << "padd_w:" << padd_w << ",padd_h:" << padd_h << endl;
-  // round�����ǰ�һ��С����������֮��ȡ��.round(2.2)=2.0000;round(2.5)=3.000;
-  // ���߿�����ɫ
   //  int top = int(round(padd_h - 0.1));
   int top = 0;
   int bottom = int(round(padd_h + 0.1));
@@ -80,7 +78,7 @@ void padding_resize(cv::InputArray& src, cv::OutputArray& dst, float& fratio,
 
   cv::copyMakeBorder(
       dst, dst, top, bottom, left, right, cv::BORDER_CONSTANT,
-      cv::Scalar(0, 0, 0)); // top, bottom, left, right�ֱ��ʾ��ԭͼ���������Ե�Ĵ�С
+      cv::Scalar(0, 0, 0));
 
   fratio = r;
   ipadd_w = int(round(padd_w + 0.1));
@@ -241,7 +239,7 @@ void run_ort_trt(Mat& img, Mat& mask) {
   std::cout << "Done!" << std::endl;
 }
 
-int main(int argc, char* args) {
+int main1(int argc, char* args) {
   cv::Mat src =
       cv::imread("C:/Users/Administrator/Desktop/road/000014.jpg"); // 720*405
   cv::Mat mask, dst;

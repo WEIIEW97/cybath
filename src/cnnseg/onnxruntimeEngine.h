@@ -54,6 +54,7 @@ public:
                  float threshold, std::vector<BoundingBox>& outboxes);
   int drawboxsave(std::string imagename, std::string savepath, int x1, int y1,
                   int x2, int y2);
+
 private:
   OrtApi* g_ort_rt;
   OrtSession* session;

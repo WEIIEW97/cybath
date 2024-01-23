@@ -15,7 +15,6 @@ typedef struct {
   int area;
 } LabelArea;
 
-
 bool labelareacmp(LabelArea x, LabelArea y) { return x.area > y.area; }
 
 int FilterNoisyArea(Mat& mask, float min_mask_area_ratio, Mat& outmask) {
@@ -100,7 +99,8 @@ int labelLineType(Mat& out_linemask, Mat& out_linetypemask) {
     vector<int> hull;
     convexHull(contours[i], hull, false, false);
 
-    // convexHull are/home/nvp/codes/cybath-master/onnxruntime-linux-x64-gpu-1.16.3/liba
+    // convexHull
+    // are/home/nvp/codes/cybath-master/onnxruntime-linux-x64-gpu-1.16.3/liba
     vector<Point> points = contours[i];
     double convex_area = 0;
     for (int i = 0; i < hull.size(); i++) {
@@ -142,22 +142,28 @@ int replaceMaskLabel(Mat& mask, Mat& out_newlabelmask) {
       uchar pixel = mask.at<uchar>(i, j);
       if (pixel < 10)
         // background
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(0 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(0 * scaleForDebug);
       else if (pixel < 50)
         // black line
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(2 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(2 * scaleForDebug);
       else if (pixel < 100)
         // white line
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(1 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(1 * scaleForDebug);
       else if (pixel < 150)
         // road
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(5 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(5 * scaleForDebug);
       else if (pixel < 220)
         // gapline
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(4 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(4 * scaleForDebug);
       else
         // startstopline
-        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(3 * scaleForDebug);
+        out_newlabelmask.at<uchar>(i, j) =
+            static_cast<uchar>(3 * scaleForDebug);
     }
   }
 
@@ -181,13 +187,17 @@ ortPathSegGPU::ortPathSegGPU() {
 };
 
 #else
-ortPathSegGPU::ortPathSegGPU() {
-  const char* road_model_path = "/home/nvp/codes/cybath/models/end2end_ocrnet_road_border.onnx";
-  const char* line_model_path = "/home/nvp/codes/cybath/models/end2end_ocrnet_line.onnx";
+ortPathSegGPU::ortPathSegGPU(const std::string& road_onnx_model_path, const std::string& line_onnx_model_path) {
+//  const char* road_model_path =
+//      "/home/nvp/codes/cybath/models/end2end_ocrnet_road_border.onnx";
+//  const char* line_model_path =
+//      "/home/nvp/codes/cybath/models/end2end_ocrnet_line.onnx";
+  road_onnx_model_path_ = road_onnx_model_path.c_str();
+  line_onnx_model_path_ = line_onnx_model_path.c_str();
 
   // initialize onnxruntime engine
-  this->ortengine_road = new OnnxRuntimeEngine(road_model_path);
-  this->ortengine_line = new OnnxRuntimeEngine(line_model_path);
+  this->ortengine_road = new OnnxRuntimeEngine(road_onnx_model_path_);
+  this->ortengine_line = new OnnxRuntimeEngine(line_onnx_model_path_);
 
   this->outbuffer_road_border = (void*)malloc(512 * 512 * sizeof(int64_t));
   this->outbuffer_line = (void*)malloc(512 * 512 * sizeof(int64_t));

@@ -1,19 +1,20 @@
 #include <iostream>
 #include <filesystem>
 #include "src/exitpoint/connected_component.h"
-#include "src/exitpoint/estimate.h"
-#include "src/startline/detect_start_line.h"
 #include "src/serial.h"
 
 using namespace std;
 namespace fs = std::filesystem;
 
 int main(int, char**) {
-  std::string root_path = "/home/nvp/data/VIS/footpath_test3_data/color";
-  std::string image_path = "/home/nvp/data/VIS/footpath_test3_data/color/1704955327.216243.png";
+//  std::string root_path = "/home/nvp/data/VIS/footpath_test3_data/color";
+  std::string root_path = "/home/william/extdisk/data/footpath_test3_data/color";
+//  std::string image_path = "/home/nvp/data/VIS/footpath_test3_data/color/1704955327.216243.png";
 
+  std::string road_onnx_model_path = "/home/william/Codes/cybath/models/end2end_ocrnet_road_border.onnx";
+  std::string line_onnx_model_path = "/home/william/Codes/cybath/models/end2end_ocrnet_line.onnx";
 
-  auto gpu_carrier = initialize_gpu();
+  auto gpu_carrier = initialize_gpu(road_onnx_model_path, line_onnx_model_path);
   int i = 0;
   auto multi_label_masks = make_shared<MultiLabelMaskSet>();
 
