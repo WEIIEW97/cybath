@@ -19,8 +19,8 @@
 
 #include <opencv2/opencv.hpp>
 
-std::vector<cv::Point> estimate_trajectory(const cv::Mat& pgm, int thr,
-                                           int kernel_size);
+std::vector<cv::Point2f> estimate_trajectory(const cv::Mat& pgm, int thr,
+                                             int kernel_size);
 cv::Point get_wavefront_exit(const cv::Mat& pgm, const cv::Point& start_point,
                              int thr, int kernel_size);
 

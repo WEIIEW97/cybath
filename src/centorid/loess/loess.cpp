@@ -46,7 +46,8 @@
 
 using namespace std;
 
-typedef CGAL::Search_traits<double, LOESS::Point, LOESS::Point::Cit, Construct_coord_iterator>
+typedef CGAL::Search_traits<double, LOESS::Point, LOESS::Point::Cit,
+                            Construct_coord_iterator>
     Traits; // search traits
 typedef CGAL::Orthogonal_incremental_neighbor_search<Traits>
     K_inc_neighbor_search;                         // incremental searcher
@@ -68,8 +69,8 @@ void triCube(regpoints_iit, regpoints_iit, weights_oit);
 
 void biCube(Tree const& tree, const vector<double>&);
 
-void localFit(Tree const&, vector<LOESS::Point> const& qp, size_t q, vector<double>&,
-              size_t, size_t, double&);
+void localFit(Tree const&, vector<LOESS::Point> const& qp, size_t q,
+              vector<double>&, size_t, size_t, double&);
 double median(vector<double>);
 
 // void mexFunction(int nlhs, mxArray *plhs[],int nrhs, const mxArray * prhs[]){
@@ -102,8 +103,8 @@ double median(vector<double>);
 //     mexErrMsgIdAndTxt("loess:spanNotScalar","Fourth argument should be a
 //     scalar");
 //   // if ( nin < min_dat )
-//   // 	mexErrMsgIdAndTxt("loess:smallInput","At least 3 rows required in
-//   first input");
+//   // 	mexErrMsgIdAndTxt("loess:smallInput","At least 3 rows required
+//   in first input");
 //   //Read required inputs
 //   span = mxGetPr( prhs[3] );
 //   x = mxGetPr( prhs[0] );
@@ -204,9 +205,9 @@ double median(vector<double>);
 //   }
 // }
 
-void loess(vector<LOESS::Point>& inpoints, const vector<LOESS::Point>& outpoints,
-           vector<double>& valsout, double span, size_t niter, size_t order,
-           size_t nthreads) {
+void loess(vector<LOESS::Point>& inpoints,
+           const vector<LOESS::Point>& outpoints, vector<double>& valsout,
+           double span, size_t niter, size_t order, size_t nthreads) {
   // Make span
   size_t nin, nout, q;
   nin = inpoints.size();
@@ -310,11 +311,10 @@ void parFit(const Tree& tree, vector<LOESS::Point>::const_iterator qp_begin,
   // 		qp_begin:  begin iterator of query points (not modified)
   // 		qp_end:	   end iterator of query points (not modified)
   // 		val_begin: begin iterator of values (modified to hold output of
-  // regression) 		q:         number of points for regression (not modified) 		n:
-  // number of terms in regression (not modified) 		order:	   order of
-  // regression (not modified)
-  // 		prog:	   to keep track of progress, between 0 and 1 (modified)
-  // Initialize variable
+  // regression) 		q:         number of points for regression (not
+  // modified) 		n: number of terms in regression (not modified)
+  // order:	   order of regression (not modified) 		prog:	   to keep track
+  // of progress, between 0 and 1 (modified) Initialize variable
   size_t ndims = qp_begin->dims(); // number of dimensions
 
   // Search for N-nearest neighbors and perform regression
@@ -391,13 +391,12 @@ void localFit(const Tree& tree, const vector<LOESS::Point>& qp, size_t q,
               vector<double>& val, size_t order, size_t nthreads,
               double& prog) {
   // This function controls the local fitting by calling the function parFit in
-  // separate computational threads. Inputs are: 	tree:     The Spatial search
-  // tree (not modified) 	qp:       Query points (not modified)
-  // 	q:	      Number of points in regression (not modified)
-  // 	val:      Estimated function value at query points (modified)
-  // 	order:    Order of the regression (not modified)
-  // 	nthreads: Number of computational threads (not modified)
-  // 	prog:	  Keeps track of progress (modified)
+  // separate computational threads. Inputs are: 	tree:     The Spatial
+  // search tree (not modified) 	qp:       Query points (not modified) 	q:
+  // Number of points in regression (not modified) 	val:      Estimated function
+  // value at query points (modified) 	order:    Order of the regression (not
+  // modified) 	nthreads: Number of computational threads (not modified) 	prog:
+  // Keeps track of progress (modified)
 
   // Compute number of input points and dimensions
   size_t nin = qp.size();

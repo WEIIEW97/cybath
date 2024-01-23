@@ -16,10 +16,8 @@ file(GLOB_RECURSE headers ${CMAKE_CURRENT_LIST_DIR}/src/*.h)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(realsense2 REQUIRED)
-find_package(PCL REQUIRED)
 find_package(OpenMP)
 
-add_definitions(${PCL_DEFINITIONS})
 
 set(mandatory_libs ${OpenCV_LIBS})
 
@@ -44,7 +42,6 @@ target_include_directories(
         ${OpenCV_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
         ${realsense2_INCLUDE_DIR}
-        ${PCL_INCLUDE_DIRS}
         ${onnx_runtime_dir}/include/onnxruntime/core/session/
         ${onnx_runtime_dir}/include/onnxruntime/core/providers/tensorrt/
         ${onnx_runtime_dir}/include
@@ -55,13 +52,11 @@ CHECK_INCLUDE_FILE_CXX(tensorrt_provider_factory.h HAVE_TENSORRT_PROVIDER_FACTOR
 target_link_directories(${PROJECT_NAME}
         PRIVATE
         ${onnx_runtime_dir}/lib
-        ${PCL_LIBRARY_DIRS}
 )
 
 target_link_libraries(
         ${PROJECT_NAME}
         ${mandatory_libs}
         ${realsense2_LIBRARY}
-        ${PCL_LIBRARIES}
         libonnxruntime.so
 )

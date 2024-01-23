@@ -32,11 +32,7 @@
 
 void loess(std::vector<LOESS::Point>& inpoints,
            const std::vector<LOESS::Point>& outpoints,
-           std::vector<double>& valsout,
-           double span,
-           size_t niter,
-           size_t order,
-           size_t nthreads);
+           std::vector<double>& valsout, double span, size_t niter,
+           size_t order, size_t nthreads);
 
 #endif // LOESS_H_
-

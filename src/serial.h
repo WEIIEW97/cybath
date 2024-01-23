@@ -19,28 +19,19 @@
 #include "startline/detect_start_line.h"
 #include "centorid/footpath.h"
 #include "cnnseg/ortpathseggpu.h"
+#include "data_types.h"
 #include <memory>
 
-struct SIG {
-  float angle = -1.0f;
-  PositionFlag sign = PositionFlag::error;
-};
-
-struct MultiLabelMaskSet {
-  cv::Mat global_start_end_lane;
-  cv::Mat border_lane;
-  cv::Mat shape_v_lane;
-  cv::Mat gap_lane;
-  cv::Mat road_lane;
-};
-
-ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path, const std::string& line_onnx_model_path);
+ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
+                              const std::string& line_onnx_model_path);
 cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream);
 void get_labeled_masks_from_onnx(
     const cv::Mat& onnx_seg_result,
     std::shared_ptr<MultiLabelMaskSet>& multi_label_masks);
 SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks);
-std::vector<cv::Vec3d> serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks, const cv::Mat& correspond_depth);
+std::vector<cv::Vec3d>
+serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
+                          const cv::Mat& correspond_depth);
 bool whether_to_begin_construction(
     const std::shared_ptr<MultiLabelMaskSet>& label_masks);
 void delete_gpu(ortPathSegGPU* GPU);

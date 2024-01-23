@@ -1,8 +1,8 @@
 #ifndef _POINT_H_
 #define _POINT_H_
-#include<vector>
-#include<algorithm>
-#include<CGAL/basic.h>
+#include <vector>
+#include <algorithm>
+#include <CGAL/basic.h>
 
 namespace LOESS {
   struct Point {
@@ -47,7 +47,7 @@ namespace LOESS {
     }
     bool operator!=(Point const& p) const { return !(*this == p); }
   };
-}
+} // namespace LOESS
 
 namespace CGAL {
   template <>
@@ -57,13 +57,16 @@ namespace CGAL {
       typedef double RT;
     };
   };
-}
-
+} // namespace CGAL
 
 struct Construct_coord_iterator {
   typedef LOESS::Point::Cit result_type;
-  LOESS::Point::Cit operator()(const LOESS::Point& p) const { return p.begin(); }
+  LOESS::Point::Cit operator()(const LOESS::Point& p) const {
+    return p.begin();
+  }
 
-  LOESS::Point::Cit operator()(const LOESS::Point& p, int) const { return p.end(); }
+  LOESS::Point::Cit operator()(const LOESS::Point& p, int) const {
+    return p.end();
+  }
 };
 #endif

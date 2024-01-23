@@ -17,15 +17,9 @@
 #ifndef FIND_LANDMARK_DETECT_START_LINE_H
 #define FIND_LANDMARK_DETECT_START_LINE_H
 
+#include "../data_types.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
-
-enum PositionFlag {
-  error = -1,
-  align = 0,
-  turn_left = 1,
-  turn_right = 2,
-};
 
 inline float rad2deg(float theta) { return theta * 180.0f / M_PI; }
 std::vector<cv::Point> get_rectangle_vertices(const cv::Mat& mask);

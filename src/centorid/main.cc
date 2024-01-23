@@ -15,8 +15,7 @@
 
 #include "footpath.h"
 
-void LoadImages(const std::string& data_path,
-                std::queue<double>& times_color,
+void LoadImages(const std::string& data_path, std::queue<double>& times_color,
                 std::queue<std::string>& img_color,
                 std::queue<double>& times_depth,
                 std::queue<std::string>& img_depth);
@@ -28,19 +27,24 @@ int main(int argc, char** argv) {
   }
 
   std::string data_path(argv[1]);
-  if (data_path.back() != '/') data_path += "/";
+  if (data_path.back() != '/')
+    data_path += "/";
 
   std::queue<double> times_color, times_depth;
   std::queue<std::string> imgs_color, imgs_depth;
   LoadImages(data_path, times_color, imgs_color, times_depth, imgs_depth);
 
-  cv::Matx33d intrinsics{381.7600630735221, 0, 319.3731939266522,
-                         0, 381.9814634837562, 243.68503537756743,
-                         0, 0, 1};
-  cv::Vec4d distortion_coeffs{-0.04442904360733734,
-                              0.037326194718717384,
-                              7.758816931839537e-06,
-                              0.0005847117569966644};
+  cv::Matx33d intrinsics{381.7600630735221,
+                         0,
+                         319.3731939266522,
+                         0,
+                         381.9814634837562,
+                         243.68503537756743,
+                         0,
+                         0,
+                         1};
+  cv::Vec4d distortion_coeffs{-0.04442904360733734, 0.037326194718717384,
+                              7.758816931839537e-06, 0.0005847117569966644};
 
   Footpath footpath(intrinsics, distortion_coeffs, -70, true);
 
@@ -67,8 +71,9 @@ int main(int argc, char** argv) {
         img_color_name = data_path + imgs_color.front();
         img_depth_name = data_path + imgs_depth.front();
         std::string::size_type ns = img_color_name.rfind('/');
-//        std::string sub_name = img_color_name.substr(ns + 1);
-//        img_mask_name = data_path + "sam_seg_mask_close/sam_seg_" + sub_name;
+        //        std::string sub_name = img_color_name.substr(ns + 1);
+        //        img_mask_name = data_path + "sam_seg_mask_close/sam_seg_" +
+        //        sub_name;
         std::string::size_type ne = img_color_name.rfind('.');
         std::string sub_name = img_color_name.substr(ns + 1, ne - ns - 1);
         img_mask_name = data_path + "color_0102/" + sub_name + "_result.jpg";
@@ -80,7 +85,8 @@ int main(int argc, char** argv) {
           break;
         }
 
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+        cv::Mat kernel =
+            cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
         cv::morphologyEx(img_mask, img_mask, cv::MORPH_OPEN, kernel);
 
         auto control_poses =
@@ -102,13 +108,11 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const std::string& data_path,
-                std::queue<double>& times_color,
+void LoadImages(const std::string& data_path, std::queue<double>& times_color,
                 std::queue<std::string>& img_color,
                 std::queue<double>& times_depth,
                 std::queue<std::string>& img_depth) {
-  auto Load = [](const std::string& file_name,
-                 std::queue<double>& times,
+  auto Load = [](const std::string& file_name, std::queue<double>& times,
                  std::queue<std::string>& img) {
     std::ifstream fin;
     fin.open(file_name, std::ios::in);
@@ -133,4 +137,3 @@ void LoadImages(const std::string& data_path,
   Load(color_file_name, times_color, img_color);
   Load(depth_file_name, times_depth, img_depth);
 }
-

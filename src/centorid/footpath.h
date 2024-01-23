@@ -10,24 +10,18 @@
 #include <opencv2/core/core.hpp>
 
 class Footpath {
- public:
+public:
   typedef std::vector<std::pair<cv::Vec3d, cv::Vec3d>> ControlPoses;
 
-  Footpath(const cv::Matx33d& intrinsics,
-           const cv::Vec4d& distortion_coeffs,
-           float angle = 70,
-           bool verbose = false);
+  Footpath(const cv::Matx33d& intrinsics, const cv::Vec4d& distortion_coeffs,
+           float angle = 70);
   ~Footpath();
 
-  ControlPoses GetControlPoses(const cv::Mat& depth,
-                               const cv::Mat& binary_mask,
-                               const cv::Mat& color = cv::Mat());
+  std::vector<cv::Vec3d> FollowPath(const cv::Mat& path_depth,
+                                    const cv::Mat& path_mask,
+                                    const cv::Mat& gap_mask);
 
-  std::vector<cv::Vec3d> FollowPath(const cv::Mat& depth,
-                                    const cv::Mat& binary_mask,
-                                    const cv::Mat& color = cv::Mat());
-
- private:
+private:
   std::vector<cv::Point2f> RowSearchingReduceMethod(const cv::Mat& img_mask);
 
   void Smooth(const std::vector<cv::Point2f>& input,
@@ -37,23 +31,19 @@ class Footpath {
                                     const float plane_intercept,
                                     const cv::Vec3f& point);
 
-  std::vector<int> GetControlPointsIndex(
-      const std::vector<cv::Point2f>& path_middle_lane, int step);
+  std::vector<int>
+  GetControlPointsIndex(const std::vector<cv::Point2f>& path_middle_lane,
+                        const cv::Mat& gap_mask, int step = 45);
 
   static cv::Vec3d Rvec2ypr(const cv::Vec3d& rvec);
   static cv::Vec3d R2ypr(const cv::Matx33d& R);
   static cv::Matx33d ypr2R(cv::Vec3d ypr);
-
-  static cv::Scalar GetColor(int index, float min_range, float max_range);
 
   cv::Matx33d intrinsics_;
   cv::Vec4d distortion_coeffs_;
   float angle_;
   bool verbose_;
   cv::Matx33d R_cam_body_;
-
-  static float colormapJet[128][3];
 };
-
 
 #endif // FOOTPATH_H_

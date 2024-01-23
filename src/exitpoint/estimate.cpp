@@ -18,8 +18,8 @@
 #include "wavefront.h"
 #include "../centorid/detect_center_line.h"
 
-std::vector<cv::Point> estimate_trajectory(const cv::Mat& pgm, int thr,
-                                           int kernel_size) {
+std::vector<cv::Point2f> estimate_trajectory(const cv::Mat& pgm, int thr,
+                                             int kernel_size) {
   ConnectedComponent cc(pgm, thr);
   cc.cross_rectangle_conv(kernel_size);
   cv::Mat walkable = cc.find_largest_connected_component();
