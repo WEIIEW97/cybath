@@ -132,7 +132,7 @@ int labelLineType(Mat& out_linemask, Mat& out_linetypemask) {
 //
 int replaceMaskLabel(Mat& mask, Mat& out_newlabelmask) {
   //
-  int scaleForDebug = 50; // 1;
+  uchar scaleForDebug = 50; // 1;
 
   out_newlabelmask = Mat::zeros(mask.rows, mask.cols, CV_8UC1);
 
@@ -142,22 +142,22 @@ int replaceMaskLabel(Mat& mask, Mat& out_newlabelmask) {
       uchar pixel = mask.at<uchar>(i, j);
       if (pixel < 10)
         // background
-        out_newlabelmask.at<uchar>(i, j) = 0 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(0 * scaleForDebug);
       else if (pixel < 50)
         // black line
-        out_newlabelmask.at<uchar>(i, j) = 2 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(2 * scaleForDebug);
       else if (pixel < 100)
         // white line
-        out_newlabelmask.at<uchar>(i, j) = 1 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(1 * scaleForDebug);
       else if (pixel < 150)
         // road
-        out_newlabelmask.at<uchar>(i, j) = 5 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(5 * scaleForDebug);
       else if (pixel < 220)
         // gapline
-        out_newlabelmask.at<uchar>(i, j) = 4 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(4 * scaleForDebug);
       else
         // startstopline
-        out_newlabelmask.at<uchar>(i, j) = 3 * scaleForDebug;
+        out_newlabelmask.at<uchar>(i, j) = static_cast<uchar>(3 * scaleForDebug);
     }
   }
 
@@ -297,13 +297,9 @@ int ortPathSegGPU::processMask(cv::Mat src, cv::Mat& finalmask) {
     return res;
   }
 
-  // imwrite("./out_linemask.jpg", out_linemask);
   cv::addWeighted(out_roadmask, 0.5, out_linetypemask, 0.5, 0, finalmask);
   cv::addWeighted(finalmask, 1.0, final_blackmask, 0.1, 0, finalmask);
   cv::addWeighted(finalmask, 1.0, final_whitemask, 0.3, 0, finalmask);
-
-  // imwrite("./out_linemask.jpg", out_linemask);
-  // imwrite("./out_roadmask.jpg", out_roadmask);
 
   // replace label
   res = replaceMaskLabel(finalmask, newlabel_finalmask);
@@ -322,62 +318,3 @@ int ortPathSegGPU::processMask(cv::Mat src, cv::Mat& finalmask) {
 
   return ONNXRUNTIMEENGINE_SUCCESS;
 }
-
-//int main() {
-//  // initialize onnxruntime engine
-//  ortPathSegGPU* ort_pathseg_gpu = new ortPathSegGPU();
-//
-//  std::string filepath = "/algdata01/huan.wang/samlabel/playground/"
-//                         "mmsegmentation/data/my_set2/images/";
-//  std::string outfilepath = "/algdata01/huan.wang/samlabel/playground/"
-//                            "mmsegmentation/data/my_set2/result/";
-//
-//  DIR* dp = nullptr;
-//  const std::string& exten = "*";
-//  struct dirent* dirp = nullptr;
-//  if ((dp = opendir(filepath.c_str())) == nullptr) {
-//    fprintf(stderr, "scandir error %s\n", filepath.c_str());
-//    return ONNXRUNTIMEENGINE_PATH_ERROR;
-//  }
-//
-//  int i = 0;
-//  while ((dirp = readdir(dp)) != nullptr) {
-//    int res;
-//    Mat src, finalmask;
-//
-//    std::string imageName;
-//
-//    if (dirp->d_type == DT_REG) {
-//      if (exten.compare("*") == 0)
-//        imageName = dirp->d_name;
-//      else if (std::string(dirp->d_name).find(exten) != std::string::npos)
-//        imageName = dirp->d_name;
-//    } else
-//      continue;
-//
-//    src = imread(filepath + imageName, IMREAD_COLOR); // read image
-//
-//    if (src.empty()) // check image is valid
-//    {
-//      fprintf(stderr, "Can not load image %s\n", imageName.c_str());
-//      continue;
-//    }
-//
-//    res = ort_pathseg_gpu->processMask(src, finalmask);
-//    if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-//      fprintf(stderr, "processSeg error %s\n", imageName.c_str());
-//      continue;
-//    }
-//
-//    // imageName is string
-//    std::string savepath = outfilepath +
-//                           imageName.substr(0, imageName.length() - 4) +
-//                           "_result.jpg";
-//    imwrite(savepath, finalmask);
-//  }
-//
-//  delete (ort_pathseg_gpu);
-//
-//  return 0;
-//}
-

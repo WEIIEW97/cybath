@@ -6,6 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(onnx_runtime_dir ${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.16.3)
 
+message(STATUS ${onnx_runtime_dir})
+
 include(CheckIncludeFileCXX)
 
 file(GLOB_RECURSE sources ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
@@ -13,6 +15,7 @@ file(GLOB_RECURSE headers ${CMAKE_CURRENT_LIST_DIR}/src/*.h)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(realsense2 REQUIRED)
 find_package(OpenMP)
 
 set(mandatory_libs ${OpenCV_LIBS})
@@ -35,6 +38,7 @@ target_include_directories(
         PRIVATE
         ${OpenCV_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
+        ${realsense2_INCLUDE_DIR}
         ${onnx_runtime_dir}/include/onnxruntime/core/session/
         ${onnx_runtime_dir}/include/onnxruntime/core/providers/tensorrt/
         ${onnx_runtime_dir}/include
@@ -50,5 +54,6 @@ target_link_directories(${PROJECT_NAME}
 target_link_libraries(
         ${PROJECT_NAME}
         ${mandatory_libs}
+        ${realsense2_LIBRARY}
         libonnxruntime.so
 )

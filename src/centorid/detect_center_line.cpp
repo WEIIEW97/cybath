@@ -38,3 +38,24 @@ std::vector<cv::Point> row_searching_reduce_method(const cv::Mat& binary_mask) {
   }
   return middle_lane_coords;
 }
+
+cv::Point
+find_gap_centorid(const std::shared_ptr<MultiLabelMaskSet>& label_masks) {
+  auto gap_mask = label_masks->gap_lane;
+
+  std::vector<cv::Point> gap_indices;
+  cv::findNonZero(gap_mask, gap_indices);
+  cv::Point centorid = {-1, -1};
+  if (!gap_indices.empty()) {
+    cv::Point sum =
+        std::accumulate(gap_indices.begin(), gap_indices.end(), cv::Point(0, 0),
+                        [](const cv::Point& a, const cv::Point& b) {
+                          return cv::Point(a.x + b.x, a.y + b.y);
+                        });
+
+    cv::Point c(static_cast<int>(sum.x / gap_indices.size()),
+                static_cast<int>(sum.y / gap_indices.size()));
+    centorid = c;
+  }
+  return centorid;
+}

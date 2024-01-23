@@ -16,9 +16,12 @@
 
 #ifndef CYBATHLON_DETECT_CENTER_LINE_H
 #define CYBATHLON_DETECT_CENTER_LINE_H
+#include "../serial.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <numeric>
 
 std::vector<cv::Point> row_searching_reduce_method(const cv::Mat& binary_mask);
+cv::Point find_gap_centorid(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
+
 #endif // CYBATHLON_DETECT_CENTER_LINE_H
