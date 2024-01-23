@@ -94,35 +94,35 @@ int labelLineType(Mat& out_linemask, Mat& out_linetypemask) {
   findContours(out_linemask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
   // iterate each contour
-  for (int i = 0; i < contours.size(); i++) {
+  for (int ii = 0; ii < contours.size(); ii++) {
     // find convelHull
     vector<int> hull;
-    convexHull(contours[i], hull, false, false);
+    convexHull(contours[ii], hull, false, false);
+    cv::RotatedRect mar = minAreaRect(Mat(contours[ii]));
 
-    // convexHull
-    // are/home/nvp/codes/cybath-master/onnxruntime-linux-x64-gpu-1.16.3/liba
-    vector<Point> points = contours[i];
+    // minAreaRect area
+    double mar_area = mar.size.area();
+
+    // convexHull area
+    vector<Point> points = contours[ii];
     double convex_area = 0;
     for (int i = 0; i < hull.size(); i++) {
       int j = (i + 1) % hull.size();
       convex_area += points[hull[i]].x * points[hull[j]].y -
                      points[hull[j]].x * points[hull[i]].y;
     }
-
-    // contour area
     double cont_area = contourArea(points);
 
     // check hull points
-    if (convex_area / cont_area < 6.0) {
-      // line
-      drawContours(out_linetypemask, contours, i, 128, -1);
-    } else {
-      // v
-      drawContours(out_linetypemask, contours, i, 255, -1);
-    }
+    if (convex_area / cont_area < 6.0)
+      if (mar_area / cont_area < 5.0) {
+        // line
+        drawContours(out_linetypemask, contours, ii, 128, -1);
+      } else {
+        // v
+        drawContours(out_linetypemask, contours, ii, 255, -1);
+      }
   }
-
-  // imwrite("out_linetypemask.jpg", out_linetypemask);
 
   return ONNXRUNTIMEENGINE_SUCCESS;
 }
@@ -187,11 +187,12 @@ ortPathSegGPU::ortPathSegGPU() {
 };
 
 #else
-ortPathSegGPU::ortPathSegGPU(const std::string& road_onnx_model_path, const std::string& line_onnx_model_path) {
-//  const char* road_model_path =
-//      "/home/nvp/codes/cybath/models/end2end_ocrnet_road_border.onnx";
-//  const char* line_model_path =
-//      "/home/nvp/codes/cybath/models/end2end_ocrnet_line.onnx";
+ortPathSegGPU::ortPathSegGPU(const std::string& road_onnx_model_path,
+                             const std::string& line_onnx_model_path) {
+  //  const char* road_model_path =
+  //      "/home/nvp/codes/cybath/models/end2end_ocrnet_road_border.onnx";
+  //  const char* line_model_path =
+  //      "/home/nvp/codes/cybath/models/end2end_ocrnet_line.onnx";
   road_onnx_model_path_ = road_onnx_model_path.c_str();
   line_onnx_model_path_ = line_onnx_model_path.c_str();
 
