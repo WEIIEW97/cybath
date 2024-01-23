@@ -36,6 +36,6 @@ struct MultiLabelMaskSet {
 ortPathSegGPU* initialize_gpu();
 cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream);
 void get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result, std::shared_ptr<MultiLabelMaskSet>& multi_label_masks);
-SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
+SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks);
 bool whether_to_begin_construction(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
 void delete_gpu(ortPathSegGPU* GPU);

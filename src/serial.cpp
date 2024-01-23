@@ -48,8 +48,12 @@ void get_labeled_masks_from_onnx(const cv::Mat& onnx_seg_result, std::shared_ptr
   multi_label_masks->road_lane *= 255;
 }
 
-SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_masks) {
+SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   auto vertices = get_rectangle_vertices(label_masks->global_start_end_lane);
+  SIG start_line_signal;
+  if (vertices.size() == 1) {
+    return start_line_signal;
+  }
 #ifdef DEBUG
   std::cout << "vertices is: "
             << "\n";
@@ -73,7 +77,7 @@ SIG serial_start_line_detect(const std::shared_ptr<MultiLabelMaskSet>& label_mas
   std::cout << ">>> angle is: " << angle << "\n";
   std::cout << ">>> direction flag is: " << flag << "\n";
 #endif
-  SIG start_line_signal;
+
   start_line_signal.angle = angle;
   flag = (angle < 1.0f) ? PositionFlag::align : flag;
   start_line_signal.sign = flag;

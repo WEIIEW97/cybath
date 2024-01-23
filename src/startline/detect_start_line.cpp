@@ -29,6 +29,7 @@ std::optional<size_t> find_last_index(const std::vector<T>& vec, T value) {
 }
 
 std::vector<cv::Point> get_rectangle_vertices(const cv::Mat& mask) {
+  if (cv::countNonZero(mask) == 0 || mask.empty()) return {{-1, -1}};
   std::vector<int> x_vec, y_vec;
 
   for (int i = 0; i < mask.rows; i++) {
