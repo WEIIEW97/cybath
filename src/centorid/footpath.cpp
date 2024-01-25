@@ -6,7 +6,6 @@
 #include "footpath.h"
 
 #include <cstdio>
-
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -14,8 +13,6 @@
 #include <random>
 #include <vector>
 #include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d.hpp>
 
 #include "loess/loess.h"
@@ -26,10 +23,10 @@ Footpath::Footpath(const cv::Matx33d& intrinsics,
 
     : intrinsics_(intrinsics), distortion_coeffs_(distortion_coeffs),
       angle_(angel) {
-  R_cam_body_ = ypr2R(cv::Vec3d(90, 0 - 90)).t();
+//  R_cam_body_ = ypr2R(cv::Vec3d(90, 0 - 90)).t();
 }
 
-Footpath::~Footpath() {}
+Footpath::~Footpath() = default;
 
 std::vector<cv::Vec3d> Footpath::FollowPath(const cv::Mat& path_depth,
                                             const cv::Mat& path_mask,
@@ -144,18 +141,21 @@ std::vector<int> Footpath::GetControlPointsIndex(
       (path_middle_lane.size() / step) +
       10); // for safe & redundancy capacity, delete 1 point and add 2 points
 #pragma omp parallel for
-  for (int i = step; i < path_middle_lane.size(); i += step) {
-    auto l2_dist = (is_gap_detected > 0)
-                       ? cv::norm(path_middle_lane[i] - gap_mass_center)
-                       : (step + 1);
-    if (l2_dist < step) {
-      // if selected point was around of gap_mass_center, then choose the
-      // step/2 near points
-      result_index.emplace_back(i - step / 2);
-      result_index.emplace_back(i + step / 2);
-    } else {
-      result_index.emplace_back(i);
-    }
+  for (int i = step; i < path_middle_lane.size() - 1; i += step) {
+
+    /// TODO: optimize ths strategy
+//    auto l2_dist = (is_gap_detected > 0)
+//                       ? cv::norm(path_middle_lane[i] - gap_mass_center)
+//                       : (step + 1);
+//    if (l2_dist < step) {
+//      // if selected point was around of gap_mass_center, then choose the
+//      // step/2 near points
+//      result_index.emplace_back(i - step / 2);
+//      result_index.emplace_back(i + step / 2);
+//    } else {
+//      result_index.emplace_back(i);
+//    }
+    result_index.emplace_back(i);
   }
   return result_index;
 }

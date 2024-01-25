@@ -24,14 +24,21 @@
 
 ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
                               const std::string& line_onnx_model_path);
+
 cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream);
+
 void get_labeled_masks_from_onnx(
     const cv::Mat& onnx_seg_result,
     std::shared_ptr<MultiLabelMaskSet>& multi_label_masks);
-SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks);
-std::vector<cv::Vec3d>
+
+Case1Package
+serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks);
+
+Case2Package
 serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
-                          const cv::Mat& correspond_depth);
+                          Footpath& footpath, const cv::Mat& correspond_depth);
+
 bool whether_to_begin_construction(
     const std::shared_ptr<MultiLabelMaskSet>& label_masks);
+
 void delete_gpu(ortPathSegGPU* GPU);

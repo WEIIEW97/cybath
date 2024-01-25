@@ -42,7 +42,7 @@ private:
   cv::Matx33d intrinsics_;
   cv::Vec4d distortion_coeffs_;
   float angle_;
-  bool verbose_;
+  bool verbose_{};
   cv::Matx33d R_cam_body_;
 };
 

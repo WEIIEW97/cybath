@@ -3,17 +3,25 @@ import cv2
 
 LABEL_SCALAR = 50
 
-if __name__ == "__main__":
-    test_onnx_seg_path = "/home/william/extdisk/data/footpath_test3_data/seg/1704955330.584353_result.bmp"
-    onnx_seg = cv2.imread(test_onnx_seg_path, cv2.IMREAD_GRAYSCALE)
+def generate_case1_cheat_board():
+    sp = np.array([0, 0])
+    initial_offset_y = 1060+1200
+    # this offset x is not the distance from the boundary
+    initial_offset_x = 1610-1475
+    dx, dy = 550, 550
+    board = np.empty((5, 5), dtype=object)
+    for i in range(4, -1, -1):
+        begin_board_offset = 2
+        if i == 4:
+            board[i][begin_board_offset] = sp+np.array([initial_offset_x, initial_offset_y])
+        else:
+            board[i][begin_board_offset] = board[i+1][begin_board_offset] + np.array([0, dy])
+        for j in range(1, 3):
+            board[i][begin_board_offset+j] = board[i][begin_board_offset+j-1] + np.array([dx, 0])
+            board[i][begin_board_offset-j] = board[i][begin_board_offset-j+1] + np.array([-dx, 0])
+    return board
 
-    gap_mask = np.uint8(np.where(onnx_seg == 4*50, 1, 0) * 255)
-    gap_indices = np.where(onnx_seg == 4 * 50)
-    print(gap_indices)
-    print(np.mean(gap_indices[0]))
-    print(np.mean(gap_indices[1]))
-    cv2.circle(gap_mask, [int(np.mean(gap_indices[1])), int(np.mean(gap_indices[0]))], 1, (0, 0, 0), 1)
-    # print(global_start_end_lane.shape)
-    cv2.imshow("global start end lane", gap_mask)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+   print(generate_case1_cheat_board())
+    

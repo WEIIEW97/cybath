@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef CYBATHLON_DETECT_CENTER_LINE_H
-#define CYBATHLON_DETECT_CENTER_LINE_H
-
-#include <opencv2/opencv.hpp>
-#include <vector>
-#include <numeric>
+#ifndef CYBATHLON_DEPTH_NAVIGATION_H
+#define CYBATHLON_DEPTH_NAVIGATION_H
 
 #include "../data_types.h"
+#include <opencv2/opencv.hpp>
+#include <memory>
 
-std::vector<cv::Point2f>
-row_searching_reduce_method(const cv::Mat& binary_mask);
-cv::Point
-find_gap_centorid(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
-cv::Point find_gap_centorid(const cv::Mat& gap_mask);
-bool action_step_up(const cv::Mat& shape_v_mask);
-bool action_step_down(const cv::Mat& shape_v_mask);
+Case3Package navigate_by_depth_and_box_3(bool has_cabinet, std::vector<int>& cabin_pos, bool has_tab, std::vector<int>& tab_pos, const cv::Mat& aligned_depth);
 
-#endif // CYBATHLON_DETECT_CENTER_LINE_H
+#endif // CYBATHLON_DEPTH_NAVIGATION_H

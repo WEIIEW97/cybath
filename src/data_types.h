@@ -24,9 +24,10 @@ enum PositionFlag {
   align = 0,
   turn_left = 1,
   turn_right = 2,
+  stop = 3,
 };
 
-struct SIG {
+struct Case1Package {
   float angle = -1.0f;
   PositionFlag sign = PositionFlag::error;
 };
@@ -37,6 +38,17 @@ struct MultiLabelMaskSet {
   cv::Mat shape_v_lane;
   cv::Mat gap_lane;
   cv::Mat road_lane;
+};
+
+struct Case2Package {
+  bool ready_for_step_up = false;
+  bool ready_for_step_down = false;
+  std::vector<cv::Vec3d> data;
+};
+
+struct Case3Package {
+  float depth;
+  PositionFlag sign;
 };
 
 #endif // CYBATHLON_DATA_TYPES_H

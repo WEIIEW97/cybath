@@ -15,6 +15,8 @@
  */
 
 #include "serial.h"
+#include "constants.h"
+#include "centorid/detect_center_line.h"
 #define LABEL_SCALAR 50
 
 ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
@@ -53,9 +55,9 @@ void get_labeled_masks_from_onnx(
   multi_label_masks->road_lane *= 255;
 }
 
-SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
+Case1Package serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   auto vertices = get_rectangle_vertices(label_masks->global_start_end_lane);
-  SIG start_line_signal;
+  Case1Package start_line_signal;
   if (vertices.size() == 1) {
     return start_line_signal;
   }
@@ -89,35 +91,34 @@ SIG serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   return start_line_signal;
 }
 
-std::vector<cv::Vec3d>
-serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
+Case2Package
+serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks, Footpath& footpath,
                           const cv::Mat& correspond_depth) {
+  Case2Package msg;
   auto mask = label_masks->road_lane;
-  /// temporally set parameters to be fixed.
-  cv::Matx33d intrinsics{381.7600630735221,
-                         0,
-                         319.3731939266522,
-                         0,
-                         381.9814634837562,
-                         243.68503537756743,
-                         0,
-                         0,
-                         1};
-  cv::Vec4d distortion_coeffs{-0.04442904360733734, 0.037326194718717384,
-                              7.758816931839537e-06, 0.0005847117569966644};
-  float camera_angle = -70;
-  ///
-  Footpath footpath(intrinsics, distortion_coeffs, camera_angle);
+  auto v_mask = label_masks->shape_v_lane;
+  bool prepare_to_step_up = false;
+  bool prepare_to_step_down = false;
+
+  prepare_to_step_up = action_step_up(v_mask);
+
+  if (!prepare_to_step_up) {
+    prepare_to_step_down = action_step_down(v_mask);
+  }
+
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
   cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
 
   auto control_poses =
       footpath.FollowPath(correspond_depth, mask, label_masks->gap_lane);
-  return control_poses;
+  msg.ready_for_step_up = prepare_to_step_up;
+  msg.ready_for_step_down = prepare_to_step_down;
+  msg.data = control_poses;
+  return msg;
 }
 
-bool whether_to_begin_construction(const SIG& signal) {
-  return true ? (signal.angle < 1.0f) : false;
+bool whether_to_begin_construction(const Case1Package& signal) {
+  return (signal.angle < 1.0f);
 }
 
 void delete_gpu(ortPathSegGPU* GPU) { delete (GPU); }

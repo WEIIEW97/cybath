@@ -37,6 +37,8 @@ row_searching_reduce_method(const cv::Mat& binary_mask) {
       middle_lane_coords.emplace_back(mean, i);
     }
   }
+
+  std::reverse(middle_lane_coords.begin(), middle_lane_coords.end());
   return middle_lane_coords;
 }
 
@@ -77,4 +79,12 @@ cv::Point find_gap_centorid(const cv::Mat& gap_mask) {
     centorid = c;
   }
   return centorid;
+}
+
+bool action_step_up(const cv::Mat& shape_v_mask) {
+  return cv::countNonZero(shape_v_mask) > 0;
+}
+
+bool action_step_down(const cv::Mat& shape_v_mask) {
+  return cv::countNonZero(shape_v_mask) > 0;
 }

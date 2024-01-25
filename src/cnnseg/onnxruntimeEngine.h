@@ -11,8 +11,8 @@
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/dnn.hpp>
 #include <iostream>
-#include "onnxruntime_cxx_api.h"
-#include <assert.h>
+#include <onnxruntime_cxx_api.h>
+#include <cassert>
 #include <vector>
 #include <fstream>
 #include <numeric>
@@ -42,6 +42,7 @@ public:
 #else
   OnnxRuntimeEngine(const char* model_path);
 #endif
+
   OrtApi* getOrtApi() { return g_ort_rt; }
   OrtSession* getOrtSession() { return session; }
   OrtAllocator* getOrtAllocator() { return allocator; }
@@ -50,10 +51,12 @@ public:
   int segmentationPost(void* output_buffer, Mat& mask, int exrows, int excols,
                        int expadw, int expadh, int rawrows, int rawcols,
                        int64_t objlabel = 1);
+
   int processDet(Mat& img, Size targetSize, long long maxclassid,
                  float threshold, std::vector<BoundingBox>& outboxes);
-  int drawboxsave(std::string imagename, std::string savepath, int x1, int y1,
-                  int x2, int y2);
+
+  int drawboxsave(Mat& src, int x1, int y1, int x2, int y2,
+                  cv::Scalar color = cv::Scalar(0, 0, 255));
 
 private:
   OrtApi* g_ort_rt;

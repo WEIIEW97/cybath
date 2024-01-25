@@ -3,9 +3,26 @@
 #include <chrono>
 #include "src/exitpoint/connected_component.h"
 #include "src/serial.h"
+#include "src/constants.h"
 
 using namespace std;
 namespace fs = std::filesystem;
+
+/// temporally set parameters to be fixed.
+cv::Matx33d intrinsics{381.7600630735221,
+                       0,
+                       319.3731939266522,
+                       0,
+                       381.9814634837562,
+                       243.68503537756743,
+                       0,
+                       0,
+                       1};
+cv::Vec4d distortion_coeffs{-0.04442904360733734, 0.037326194718717384,
+                            7.758816931839537e-06, 0.0005847117569966644};
+float camera_angle = -40;
+/// TODO: optimize this class call, avoid call to construct in every loop
+Footpath footpath(intrinsics, distortion_coeffs, camera_angle);
 
 int main(int, char**) {
   using namespace std::chrono;
@@ -42,18 +59,6 @@ int main(int, char**) {
   sort(all_depth_paths.begin(), all_depth_paths.end(),
        [](const string& a, const string& b) { return a < b; });
 
-  // for (const auto& p : all_image_paths) {
-  //   cv::Mat rgb = cv::imread(p);
-  //   cv::Mat path_seg = onnx_path_seg(rgb, gpu_carrier);
-  //   get_labeled_masks_from_onnx(path_seg, multi_label_masks);
-  //   // auto start_line_flag = serial_start_line_detect(multi_label_masks);
-  //   cout << "begin frame: " << i << "\n";
-  //   // cout << start_line_flag.angle << "\n";
-  //   // cout << start_line_flag.sign << "\n";
-  //   cout << "=========================" << "\n";
-  //   i++;
-  // }
-
   for (int i = 0; i < all_image_paths.size(); ++i) {
     auto curr_time = high_resolution_clock::now();
     cv::Mat rgb = cv::imread(all_image_paths[i]);
@@ -61,12 +66,12 @@ int main(int, char**) {
     cv::Mat path_seg = onnx_path_seg(rgb, gpu_carrier);
     get_labeled_masks_from_onnx(path_seg, multi_label_masks);
     // auto start_line_flag = serial_start_line_detect(multi_label_masks);
-    auto control_poses = serial_center_line_detect(multi_label_masks, depth);
+    auto control_poses = serial_center_line_detect(multi_label_masks, footpath, depth);
     duration<double> elapsed_seconds = curr_time - last_time;
     double fps = 1.0 / elapsed_seconds.count();
     cout << "begin frame: " << i << "\n";
-    cout << control_poses[0] << "\n";
-    cout << control_poses.back() << "\n";
+    cout << control_poses.data[0] << "\n";
+    cout << control_poses.data.back() << "\n";
     // cout << start_line_flag.angle << "\n";
     // cout << start_line_flag.sign << "\n";
     cout << "========================="
@@ -77,5 +82,7 @@ int main(int, char**) {
   }
 
   delete_gpu(gpu_carrier);
+//  auto cheat_board = case1_cheat_board();
+//  print_board(cheat_board);
   return 0;
 }

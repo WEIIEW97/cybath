@@ -1,4 +1,4 @@
-﻿#include "../src/cnnseg/onnxruntimeEngine.h"
+﻿#include "onnxruntimeEngine.h"
 
 #ifndef _WIN32
 #include <dirent.h>
@@ -9,45 +9,15 @@
 
 #include <vector>
 #include <algorithm>
-#include "ortobjectgpu.h"
+#include "task4emptyseat.h"
+#include "common.h"
 
 using namespace cv;
 using namespace std;
 
 #define INDOOROBJS_ERR_BASE             100
 #define INDOOROBJS_ERR_NO_VALIBLE_SEATS 101
-#define DEBUGMODE                       0
-
-// sort x first , then y
-bool xycompare(const BoundingBox& a, const BoundingBox& b) {
-  if (a.x1 < b.x1)
-    return true;
-  if (a.x1 > b.x1)
-    return false;
-  return a.y1 < b.y1;
-}
-
-bool xcompare(const BoundingBox& a, const BoundingBox& b) {
-  return a.x1 < b.x1;
-}
-
-bool ycompare(const BoundingBox& a, const BoundingBox& b) {
-  return a.y1 < b.y1;
-}
-
-int overlapArea(const BoundingBox& r1, const BoundingBox& r2) {
-  int left = std::max(r1.x1, r2.x1);
-  int right = std::min(r1.x2, r2.x2);
-  int top = std::max(r1.y1, r2.y1);
-  int bottom = std::min(r1.y2, r2.y2);
-
-  int width = std::max(0, right - left);
-  int height = std::max(0, bottom - top);
-
-  return width * height;
-}
-
-int boxarea(const BoundingBox& r1) { return (r1.x2 - r1.x1) * (r1.y2 - r1.y1); }
+#define EMPTYSEATDEBUGMODE              1
 
 // FIX: chair not detected because occuluded by person
 // TODO: bag box overlap with two chair box
@@ -186,7 +156,8 @@ int FindAvailableChair(std::vector<BoundingBox>& person_outboxes,
   return ONNXRUNTIMEENGINE_SUCCESS;
 }
 
-int GetShelvPos(std::vector<BoundingBox>& furn_outboxes, BoundingBox& shelve) {
+int GetLowShelvPos(std::vector<BoundingBox>& furn_outboxes,
+                   BoundingBox& shelve) {
   bool findobj = false;
   for (auto& box : furn_outboxes) {
     if (box.label == 2) // shelve
@@ -211,43 +182,44 @@ int GetShelvPos(std::vector<BoundingBox>& furn_outboxes, BoundingBox& shelve) {
 
 #ifdef _WIN32
 
-ortObjectGPU::ortObjectGPU() {
-  const wchar_t* coco_model_path =
-      L"C:/Users/Administrator/Desktop/end2end_yolox_coco.onnx";
-  const wchar_t* furnitures_model_path =
-      L"C:/Users/Administrator/Desktop/end2end_yolox_furnitures.onnx";
-
+EmptyseatTask::EmptyseatTask(const wchar_t* coco_model_path,
+                             const wchar_t* furnitures_model_path,
+                             const wchar_t* border_model_path) {
   // initialize onnxruntime engine
   this->ortengine_coco = new OnnxRuntimeEngine(coco_model_path);
   this->ortengine_furn = new OnnxRuntimeEngine(furnitures_model_path);
+
+  // initialize onnxruntime engine
+  foresttask = new ForestTask(border_model_path);
 };
 
 #else
-ortObjectGPU::ortObjectGPU() {
-  const char* coco_model_path =
-      "/algdata01/huan.wang/samlabel/playground/mmdetection/work_dirs/"
-      "yolox_s_8xb8-300e_coco/end2end_yolox_coco.onnx";
-  const char* furnitures_model_path =
-      "/algdata01/huan.wang/samlabel/playground/mmdetection/work_dirs/"
-      "yolox_s_8xb8-300e_coco/end2end_yolox_furnitures.onnx";
-
+EmptyseatTask::EmptyseatTask(const char* coco_model_path,
+                             const char* furnitures_model_path,
+                             const char* border_model_path) {
   // initialize onnxruntime engine
   this->ortengine_coco = new OnnxRuntimeEngine(coco_model_path);
   this->ortengine_furn = new OnnxRuntimeEngine(furnitures_model_path);
+
+  // initialize onnxruntime engine
+  foresttask = new ForestTask(border_model_path);
 };
 #endif
 
-ortObjectGPU::~ortObjectGPU() {
+EmptyseatTask::~EmptyseatTask() {
   delete (ortengine_coco);
   delete (ortengine_furn);
+
+  delete (foresttask);
 }
 
 // available
 // 0,1,2
 // 3,4,5
 // if available[i] = true, chair empty
-int ortObjectGPU::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
-                            std::vector<int>& position, std::string imageName) {
+int EmptyseatTask::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
+                             std::vector<int>& position, cv::Mat& bordermask,
+                             cv::Mat& visimg) {
   int res;
   std::vector<BoundingBox> coco_outboxes, furn_outboxes;
 
@@ -255,7 +227,7 @@ int ortObjectGPU::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
 
   if (src.empty()) // check image is valid
   {
-    fprintf(stderr, "src image empty %s\n", imageName.c_str());
+    fprintf(stderr, "src image empty\n");
     return ONNXRUNTIMEENGINE_FILE_ERROR;
   }
 
@@ -265,54 +237,37 @@ int ortObjectGPU::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
   res = ortengine_coco->processDet(src, Size(640, 640), 0, 0.5, coco_outboxes);
 
   if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-    fprintf(stderr, "processSeg error %s\n", imageName.c_str());
+    fprintf(stderr, "coco model processDet error\n");
     return res;
   }
 
   res = ortengine_furn->processDet(src, Size(640, 640), 2, 0.6, furn_outboxes);
 
   if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-    fprintf(stderr, "processSeg error %s\n", imageName.c_str());
+    fprintf(stderr, "furniture model processDet error\n");
     return res;
   }
 
   // imageName is string
-#ifdef _WIN32
-  std::string filepath = "./";
-  std::string outfilepath = "./";
-#else
-  std::string filepath =
-      "/algdata01/huan.wang/samlabel/labelme/examples/instance_segmentation/"
-      "furnitures/chairsshelves_coco/JPEGImages/";
-  std::string outfilepath = "/algdata01/huan.wang/samlabel/playground/"
-                            "mmdetection/data/my_set1/result/";
-#endif
-
-#if DEBUGMODE
-  std::string savepath =
-      outfilepath + imageName.substr(0, imageName.length() - 4) + "_result.jpg";
-
+#if EMPTYSEATDEBUGMODE
   bool firstsave = true;
+
+  visimg = src.clone();
   for (auto& box : coco_outboxes) {
-    if (firstsave) {
-      ortengine_coco->drawboxsave(filepath + imageName, savepath, (int)box.x1,
-                                  (int)box.y1, (int)box.x2, (int)box.y2);
-      firstsave = false;
-    } else {
-      ortengine_coco->drawboxsave(savepath, savepath, (int)box.x1, (int)box.y1,
-                                  (int)box.x2, (int)box.y2);
-    }
+    ortengine_coco->drawboxsave(visimg, (int)box.x1, (int)box.y1, (int)box.x2,
+                                (int)box.y2, cv::Scalar(255, 0, 0));
   }
 
   for (auto& box : furn_outboxes) {
-    if (firstsave) {
-      ortengine_furn->drawboxsave(filepath + imageName, savepath, (int)box.x1,
-                                  (int)box.y1, (int)box.x2, (int)box.y2);
-      firstsave = false;
-    } else {
-      ortengine_furn->drawboxsave(savepath, savepath, (int)box.x1, (int)box.y1,
-                                  (int)box.x2, (int)box.y2);
-    }
+    if (box.label == 0) // chair
+      ortengine_furn->drawboxsave(visimg, (int)box.x1, (int)box.y1, (int)box.x2,
+                                  (int)box.y2);
+    else if (box.label == 1) // bug
+      ortengine_furn->drawboxsave(visimg, (int)box.x1, (int)box.y1, (int)box.x2,
+                                  (int)box.y2, cv::Scalar(0, 255, 0));
+    else // lowshelve
+      ortengine_furn->drawboxsave(visimg, (int)box.x1, (int)box.y1, (int)box.x2,
+                                  (int)box.y2, cv::Scalar(255, 255, 0));
   }
 #endif
 
@@ -333,36 +288,44 @@ int ortObjectGPU::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
       for (int idx = 0; idx < 6; idx++)
         available[idx] = false;
 
-      fprintf(stderr, "processSeg error %s\n", imageName.c_str());
+      fprintf(stderr, "FindAvailableChair error \n");
       return res;
     }
 
   } else {
     // process !=6 chairs
-    fprintf(stderr, "cannot find 6 chairs\n", imageName.c_str());
+    fprintf(stderr, "cannot find 6 chairs\n");
 
     for (int idx = 0; idx < 6; idx++)
       available[idx] = false;
   }
 
-  // Get box of shelve
-  BoundingBox shelve;
+  // Get box of lowshelve
+  BoundingBox lowshelve;
   hasCabinet = false;
-  res = GetShelvPos(furn_outboxes, shelve);
+  position.clear();
+  res = GetLowShelvPos(furn_outboxes, lowshelve);
   if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-    fprintf(stderr, "processDet error %s\n", imageName.c_str());
+    fprintf(stderr, "GetLowShelvPos error %s");
     return res;
   }
 
-  if (shelve.x2 - shelve.x1 < 1.0)
+  if (lowshelve.x2 - lowshelve.x1 < 1.0)
     hasCabinet = false;
   else {
     hasCabinet = true;
 
-    position.push_back((int)shelve.x1);
-    position.push_back((int)shelve.y1);
-    position.push_back((int)shelve.x2);
-    position.push_back((int)shelve.y2);
+    position.push_back((int)lowshelve.x1);
+    position.push_back((int)lowshelve.y1);
+    position.push_back((int)lowshelve.x2);
+    position.push_back((int)lowshelve.y2);
+  }
+
+  // call foresttask = border prediction
+  res = foresttask->processMask(src, bordermask);
+  if (res != ONNXRUNTIMEENGINE_SUCCESS) {
+    fprintf(stderr, "ForestTask processMask error\n");
+    return res;
   }
 
   endTime = clock();
@@ -373,10 +336,12 @@ int ortObjectGPU::findChair(cv::Mat src, bool available[6], bool& hasCabinet,
 }
 
 #ifdef _WIN32
-int main() {
-  ortObjectGPU* ort_object_gpu = new ortObjectGPU();
+int mainEmptyseatTask() {
+  EmptyseatTask* emptyseattask = new EmptyseatTask(
+      coco_model_path, furnitures_model_path, border_model_path);
 
   std::string filepath = "./";
+  std::string outfilepath = "./";
 
   int imgcount = 1;
   // int imgcount = 917;
@@ -386,6 +351,8 @@ int main() {
     std::vector<int> position;
     bool available[6] = {false};
     bool hasCabinet = false;
+    Mat bordermask;
+    Mat visimg;
 
     // std::stringstream ss;
     // ss << std::setfill('0') << std::setw(6) << i << ".jpg";
@@ -399,20 +366,23 @@ int main() {
 
     if (src.empty()) // check image is valid
     {
-      fprintf(stderr, "Can not load image %s\n", imageName.c_str());
+      fprintf(stderr, "EmptyseatTask Can not load image %s\n",
+              imageName.c_str());
       continue;
     }
+
+    printf("now process %s\n", imageName.c_str());
 
     // only get person label
-    res = ort_object_gpu->findChair(src, available, hasCabinet, position,
-                                    imageName);
+    res = emptyseattask->findChair(src, available, hasCabinet, position,
+                                   bordermask, visimg);
 
     if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-      fprintf(stderr, "processSeg error %s\n", imageName.c_str());
+      fprintf(stderr, "EmptyseatTask findChair error %s\n", imageName.c_str());
       continue;
     }
 
-#if DEBUGMODE
+#if EMPTYSEATDEBUGMODE
     for (int i = 0; i < 6; i++) {
       if (available[i])
         std::cout << "seat row " << floor(i / 3) + 1 << " col " << i % 3 + 1
@@ -422,20 +392,31 @@ int main() {
     if (hasCabinet)
       std::cout << "shelve at (" << position[0] << "," << position[1] << "), ("
                 << position[2] << "," << position[3] << ")" << std::endl;
+
+    // imageName is string
+    std::string savepath = outfilepath +
+                           imageName.substr(0, imageName.length() - 4) +
+                           "_result.jpg";
+    imwrite(savepath, visimg);
+
+    // imageName is string
+    savepath = outfilepath + imageName.substr(0, imageName.length() - 4) +
+               "_border_result.jpg";
+    imwrite(savepath, bordermask);
 #endif
   }
 
-  delete (ort_object_gpu);
+  delete (emptyseattask);
 
   return 0;
 }
 #else
-int main() {
-  ortObjectGPU* ort_object_gpu = new ortObjectGPU();
+int mainEmptyseatTask() {
+  EmptyseatTask* emptyseattask = new EmptyseatTask(
+      coco_model_path, furnitures_model_path, border_model_path);
 
-  std::string filepath =
-      "/algdata01/huan.wang/samlabel/labelme/examples/instance_segmentation/"
-      "furnitures/chairsshelves_coco/JPEGImages/";
+  std::string filepath = "../test/";
+  std::string outfilepath = "../result/";
 
   DIR* dp = nullptr;
   const std::string& exten = "*";
@@ -452,7 +433,8 @@ int main() {
     std::vector<int> position;
     bool available[6] = {false};
     bool hasCabinet = false;
-
+    Mat bordermask;
+    Mat visimg;
     std::string imageName;
 
     if (dirp->d_type == DT_REG) {
@@ -467,22 +449,23 @@ int main() {
 
     if (src.empty()) // check image is valid
     {
-      fprintf(stderr, "Can not load image %s\n", imageName.c_str());
+      fprintf(stderr, "EmptyseatTask Can not load image %s\n",
+              imageName.c_str());
       continue;
     }
 
     printf("now process %s\n", imageName.c_str());
 
     // only get person label
-    res = ort_object_gpu->findChair(src, available, hasCabinet, position,
-                                    imageName);
+    res = emptyseattask->findChair(src, available, hasCabinet, position,
+                                   bordermask, visimg);
 
     if (res != ONNXRUNTIMEENGINE_SUCCESS) {
-      fprintf(stderr, "processSeg error %s\n", imageName.c_str());
+      fprintf(stderr, "EmptyseatTask findChair error %s\n", imageName.c_str());
       continue;
     }
 
-#if DEBUGMODE
+#if EMPTYSEATDEBUGMODE
     for (int i = 0; i < 6; i++) {
       if (available[i])
         std::cout << "seat row " << floor(i / 3) + 1 << " col " << i % 3 + 1
@@ -492,11 +475,23 @@ int main() {
     if (hasCabinet)
       std::cout << "shelve at (" << position[0] << "," << position[1] << "), ("
                 << position[2] << "," << position[3] << ")" << std::endl;
+
+    // imageName is string
+    std::string savepath = outfilepath +
+                           imageName.substr(0, imageName.length() - 4) +
+                           "_box_result.jpg";
+    imwrite(savepath, visimg);
+
+    // imageName is string
+    savepath = outfilepath + imageName.substr(0, imageName.length() - 4) +
+               "_border_result.jpg";
+    imwrite(savepath, bordermask);
+
 #endif
   }
 
   closedir(dp);
-  delete (ort_object_gpu);
+  delete (emptyseattask);
 
   return 0;
 }

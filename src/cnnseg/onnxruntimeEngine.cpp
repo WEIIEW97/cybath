@@ -480,13 +480,14 @@ int OnnxRuntimeEngine::detectionPost(void* dets_buffer, void* labels_buffer,
   return ONNXRUNTIMEENGINE_SUCCESS;
 }
 
-int OnnxRuntimeEngine::drawboxsave(std::string imagename, std::string savepath,
-                                   int x1, int y1, int x2, int y2) {
-  cv::Mat image = cv::imread(imagename);
+int OnnxRuntimeEngine::drawboxsave(Mat& src, int x1, int y1, int x2, int y2,
+                                   cv::Scalar color) {
+  // position
   cv::Point pt1(x1, y1);
   cv::Point pt2(x2, y2);
-  cv::Scalar color(0, 0, 255);
-  cv::rectangle(image, pt1, pt2, color, 2);
-  cv::imwrite(savepath, image);
+
+  // 画框
+  cv::rectangle(src, pt1, pt2, color, 2);
+
   return ONNXRUNTIMEENGINE_SUCCESS;
 }
