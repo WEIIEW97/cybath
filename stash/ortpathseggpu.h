@@ -1,4 +1,4 @@
-#include "onnxruntimeEngine.h"
+#include "../src/cnnseg/onnxruntimeEngine.h"
 
 class ortPathSegGPU {
 public:

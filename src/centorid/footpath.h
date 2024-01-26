@@ -31,7 +31,7 @@ private:
                                     const float plane_intercept,
                                     const cv::Vec3f& point);
 
-  std::vector<int>
+  std::pair<std::vector<int>, cv::Point2f>
   GetControlPointsIndex(const std::vector<cv::Point2f>& path_middle_lane,
                         const cv::Mat& gap_mask, int step = 45);
 

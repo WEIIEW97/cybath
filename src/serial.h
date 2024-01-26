@@ -18,8 +18,9 @@
 
 #include "startline/detect_start_line.h"
 #include "centorid/footpath.h"
-#include "cnnseg/ortpathseggpu.h"
+#include "../stash/ortpathseggpu.h"
 #include "data_types.h"
+#include "depthnavi/depth_navigation.h"
 #include <memory>
 
 ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
@@ -36,7 +37,8 @@ serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks);
 
 Case2Package
 serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
-                          Footpath& footpath, const cv::Mat& correspond_depth);
+                          Footpath& footpath, const cv::Mat& correspond_depth,
+                          float indicate_thr);
 
 bool whether_to_begin_construction(
     const std::shared_ptr<MultiLabelMaskSet>& label_masks);

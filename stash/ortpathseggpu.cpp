@@ -1,4 +1,4 @@
-﻿#include "onnxruntimeEngine.h"
+﻿#include "../src/cnnseg/onnxruntimeEngine.h"
 #include "ortpathseggpu.h"
 #ifndef _WIN32
 #include <dirent.h>

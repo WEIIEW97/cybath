@@ -23,7 +23,7 @@ Footpath::Footpath(const cv::Matx33d& intrinsics,
 
     : intrinsics_(intrinsics), distortion_coeffs_(distortion_coeffs),
       angle_(angel) {
-//  R_cam_body_ = ypr2R(cv::Vec3d(90, 0 - 90)).t();
+  //  R_cam_body_ = ypr2R(cv::Vec3d(90, 0 - 90)).t();
 }
 
 Footpath::~Footpath() = default;
@@ -44,7 +44,7 @@ std::vector<cv::Vec3d> Footpath::FollowPath(const cv::Mat& path_depth,
 
   // Get the control points index
   auto control_points_index =
-      GetControlPointsIndex(path_middle_lane_coords, gap_mask);
+      GetControlPointsIndex(path_middle_lane_coords, gap_mask).first;
   if (control_points_index.empty())
     return control_poses;
 
@@ -127,7 +127,7 @@ void Footpath::Smooth(const std::vector<cv::Point2f>& input,
   }
 }
 
-std::vector<int> Footpath::GetControlPointsIndex(
+std::pair<std::vector<int>, cv::Point2f> Footpath::GetControlPointsIndex(
     const std::vector<cv::Point2f>& path_middle_lane, const cv::Mat& gap_mask,
     int step) {
 
@@ -144,20 +144,21 @@ std::vector<int> Footpath::GetControlPointsIndex(
   for (int i = step; i < path_middle_lane.size() - 1; i += step) {
 
     /// TODO: optimize ths strategy
-//    auto l2_dist = (is_gap_detected > 0)
-//                       ? cv::norm(path_middle_lane[i] - gap_mass_center)
-//                       : (step + 1);
-//    if (l2_dist < step) {
-//      // if selected point was around of gap_mass_center, then choose the
-//      // step/2 near points
-//      result_index.emplace_back(i - step / 2);
-//      result_index.emplace_back(i + step / 2);
-//    } else {
-//      result_index.emplace_back(i);
-//    }
+    //    auto l2_dist = (is_gap_detected > 0)
+    //                       ? cv::norm(path_middle_lane[i] - gap_mass_center)
+    //                       : (step + 1);
+    //    if (l2_dist < step) {
+    //      // if selected point was around of gap_mass_center, then choose the
+    //      // step/2 near points
+    //      result_index.emplace_back(i - step / 2);
+    //      result_index.emplace_back(i + step / 2);
+    //    } else {
+    //      result_index.emplace_back(i);
+    //    }
     result_index.emplace_back(i);
   }
-  return result_index;
+  cv::Point2f first_control_point_coord_2d = path_middle_lane[result_index[0]];
+  return std::make_pair(result_index, first_control_point_coord_2d);
 }
 
 cv::Vec3d Footpath::Rvec2ypr(const cv::Vec3d& rvec) {

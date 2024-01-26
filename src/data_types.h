@@ -25,6 +25,8 @@ enum PositionFlag {
   turn_left = 1,
   turn_right = 2,
   stop = 3,
+  stop_at_one = 4,
+  stop_at_two = 5,
 };
 
 struct Case1Package {
@@ -41,8 +43,8 @@ struct MultiLabelMaskSet {
 };
 
 struct Case2Package {
-  bool ready_for_step_up = false;
-  bool ready_for_step_down = false;
+  bool step_up_sign = false;
+  bool step_down_sign = false;
   std::vector<cv::Vec3d> data;
 };
 

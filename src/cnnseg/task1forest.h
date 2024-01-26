@@ -9,7 +9,7 @@ public:
 #ifdef _WIN32
   ForestTask(const wchar_t* border_model_path);
 #else
-  explicit ForestTask(const char* border_model_path);
+  ForestTask(const char* border_model_path);
 #endif
 
   ~ForestTask();

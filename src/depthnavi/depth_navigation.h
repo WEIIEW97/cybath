@@ -21,6 +21,14 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 
-Case3Package navigate_by_depth_and_box_3(bool has_cabinet, std::vector<int>& cabin_pos, bool has_tab, std::vector<int>& tab_pos, const cv::Mat& aligned_depth);
-
+Case3Package navigate_by_depth_and_box_3(bool has_cabinet,
+                                         std::vector<int>& cabin_pos,
+                                         bool has_tab,
+                                         std::vector<int>& tab_pos,
+                                         const cv::Mat& aligned_depth);
+Case3Package navigate_by_depth_and_box_4(bool has_cabinet,
+                                         std::vector<int>& position,
+                                         const cv::Mat& rgb,
+                                         const cv::Mat& aligned_depth,
+                                         float dist_1, float dist_2);
 #endif // CYBATHLON_DEPTH_NAVIGATION_H

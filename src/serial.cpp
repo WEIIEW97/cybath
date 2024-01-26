@@ -19,13 +19,16 @@
 #include "centorid/detect_center_line.h"
 #define LABEL_SCALAR 50
 
+#if 0
 ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
                               const std::string& line_onnx_model_path) {
   auto* ort_pathseg_gpu =
       new ortPathSegGPU(road_onnx_model_path, line_onnx_model_path);
   return ort_pathseg_gpu;
 }
+#endif
 
+#if 0
 cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream) {
   cv::Mat onnx_seg;
   auto res = stream->processMask(frame, onnx_seg);
@@ -35,6 +38,7 @@ cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream) {
   }
   return onnx_seg;
 }
+#endif
 
 void get_labeled_masks_from_onnx(
     const cv::Mat& onnx_seg_result,
@@ -55,7 +59,8 @@ void get_labeled_masks_from_onnx(
   multi_label_masks->road_lane *= 255;
 }
 
-Case1Package serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
+Case1Package
+serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks) {
   auto vertices = get_rectangle_vertices(label_masks->global_start_end_lane);
   Case1Package start_line_signal;
   if (vertices.size() == 1) {
@@ -92,15 +97,23 @@ Case1Package serial_start_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_
 }
 
 Case2Package
-serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks, Footpath& footpath,
-                          const cv::Mat& correspond_depth) {
+serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
+                          Footpath& footpath, const cv::Mat& correspond_depth,
+                          float indicate_thr) {
   Case2Package msg;
   auto mask = label_masks->road_lane;
   auto v_mask = label_masks->shape_v_lane;
   bool prepare_to_step_up = false;
   bool prepare_to_step_down = false;
 
+  cv::imshow("v lane", v_mask);
+  cv::waitKey(0);
+  cv::destroyAllWindows();
+
+
   prepare_to_step_up = action_step_up(v_mask);
+
+  std::cout << prepare_to_step_up << std::endl;
 
   if (!prepare_to_step_up) {
     prepare_to_step_down = action_step_down(v_mask);
@@ -111,8 +124,22 @@ serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks, Footp
 
   auto control_poses =
       footpath.FollowPath(correspond_depth, mask, label_masks->gap_lane);
-  msg.ready_for_step_up = prepare_to_step_up;
-  msg.ready_for_step_down = prepare_to_step_down;
+
+  auto nearest_point = cv::Point2d(control_poses[0][1], control_poses[0][2]);
+
+  auto l2_dist = cv::sqrt(nearest_point.x * nearest_point.x +
+                          nearest_point.y * nearest_point.y);
+
+  std::cout << "l2 dist: " << l2_dist << "\n";
+
+  if (l2_dist < indicate_thr && prepare_to_step_up) {
+    msg.step_up_sign = true;
+  }
+
+  if (l2_dist < indicate_thr && prepare_to_step_down) {
+    msg.step_down_sign = true;
+  }
+
   msg.data = control_poses;
   return msg;
 }
@@ -121,4 +148,6 @@ bool whether_to_begin_construction(const Case1Package& signal) {
   return (signal.angle < 1.0f);
 }
 
+#if 0
 void delete_gpu(ortPathSegGPU* GPU) { delete (GPU); }
+#endif
