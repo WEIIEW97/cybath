@@ -407,8 +407,10 @@ int mainRouteTask() {
     //	for (int j = 0; j < finalmask.cols; j++)
     //	{
     //		uchar pixel = finalmask.at<uchar>(i, j);
-    //		if (pixel != 0 && pixel != 50 && pixel != 100 && pixel != 150 && pixel
-    //!= 200 && pixel != 250) 			std::cout << i << "," << j << std::endl;
+    //		if (pixel != 0 && pixel != 50 && pixel != 100 && pixel != 150 &&
+    // pixel
+    //!= 200 && pixel != 250) 			std::cout << i << "," << j <<
+    //! std::endl;
     //
     //	}
     //}
@@ -451,7 +453,8 @@ int mainRouteTask() {
 int mainRouteTask() {
   // initialize onnxruntime engine
   RouteTask* routetask =
-      new RouteTask(road_model_path, border_model_path, line_model_path);
+      new RouteTask(road_model_path.c_str(), border_model_path.c_str(),
+                    line_model_path.c_str());
 
   std::string filepath = "../test/";
   std::string outfilepath = "../result/";

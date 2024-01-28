@@ -81,10 +81,22 @@ cv::Point find_gap_centorid(const cv::Mat& gap_mask) {
   return centorid;
 }
 
-bool action_step_up(const cv::Mat& shape_v_mask) {
-  return cv::countNonZero(shape_v_mask) > 0;
+cv::Point find_gap_centorid(const std::vector<cv::Point>& gap_coords) {
+  cv::Point centorid = {-1, -1};
+  if (!gap_coords.empty()) {
+    cv::Point sum =
+        std::accumulate(gap_coords.begin(), gap_coords.end(), cv::Point(0, 0),
+                        [](const cv::Point& a, const cv::Point& b) {
+                          return cv::Point(a.x + b.x, a.y + b.y);
+                        });
+
+    cv::Point c(static_cast<int>(sum.x / gap_coords.size()),
+                static_cast<int>(sum.y / gap_coords.size()));
+    centorid = c;
+  }
+  return centorid;
 }
 
-bool action_step_down(const cv::Mat& shape_v_mask) {
-  return cv::countNonZero(shape_v_mask) > 0;
+bool is_mask_appear(const cv::Mat& gap_mask) {
+  return cv::countNonZero(gap_mask) > 0;
 }

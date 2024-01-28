@@ -10,11 +10,10 @@
 #include <stdio.h>
 #include <iostream>
 
-typedef struct
-{
-	int label;
-	int area;
-}LabelArea;
+typedef struct {
+  int label;
+  int area;
+} LabelArea;
 
 bool labelareacmp(LabelArea x, LabelArea y);
 

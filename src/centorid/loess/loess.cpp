@@ -313,8 +313,8 @@ void parFit(const Tree& tree, vector<LOESS::Point>::const_iterator qp_begin,
   // 		val_begin: begin iterator of values (modified to hold output of
   // regression) 		q:         number of points for regression (not
   // modified) 		n: number of terms in regression (not modified)
-  // order:	   order of regression (not modified) 		prog:	   to keep
-  // track of progress, between 0 and 1 (modified) Initialize variable
+  // order:	   order of regression (not modified) 		prog:	   to
+  // keep track of progress, between 0 and 1 (modified) Initialize variable
   size_t ndims = qp_begin->dims(); // number of dimensions
 
   // Search for N-nearest neighbors and perform regression

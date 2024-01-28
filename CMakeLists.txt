@@ -19,6 +19,8 @@ find_package(Eigen3 REQUIRED)
 find_package(realsense2 REQUIRED)
 find_package(OpenMP)
 
+add_compile_definitions(PROJECT_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+
 message(STATUS "opencv include dir: ${OpenCV_INCLUDE_DIRS}")
 
 set(mandatory_libs ${OpenCV_LIBS})

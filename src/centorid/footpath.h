@@ -11,6 +11,13 @@
 
 class Footpath {
 public:
+  cv::Point2f nearest_control_point_coord_;
+  bool is_v_mask_exists_ = false;
+  bool is_have_seen_step_up_sign_ = false;
+  bool step_up_sign_ = false;
+  bool step_down_sign_ = false;
+
+public:
   typedef std::vector<std::pair<cv::Vec3d, cv::Vec3d>> ControlPoses;
 
   Footpath(const cv::Matx33d& intrinsics, const cv::Vec4d& distortion_coeffs,
@@ -21,17 +28,15 @@ public:
                                     const cv::Mat& path_mask,
                                     const cv::Mat& gap_mask);
 
+  cv::Point CalculateBottomGapMaskCenterCoord(const cv::Mat& gap_mask);
+
 private:
   std::vector<cv::Point2f> RowSearchingReduceMethod(const cv::Mat& img_mask);
 
   void Smooth(const std::vector<cv::Point2f>& input,
               std::vector<cv::Point2f>& output);
 
-  cv::Vec3f GetIntersectPointFromLP(const cv::Vec3f& plane_normal_vector,
-                                    const float plane_intercept,
-                                    const cv::Vec3f& point);
-
-  std::pair<std::vector<int>, cv::Point2f>
+  std::vector<int>
   GetControlPointsIndex(const std::vector<cv::Point2f>& path_middle_lane,
                         const cv::Mat& gap_mask, int step = 45);
 
@@ -42,7 +47,6 @@ private:
   cv::Matx33d intrinsics_;
   cv::Vec4d distortion_coeffs_;
   float angle_;
-  bool verbose_{};
   cv::Matx33d R_cam_body_;
 };
 

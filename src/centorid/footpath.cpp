@@ -5,11 +5,7 @@
 
 #include "footpath.h"
 
-#include <cstdio>
 #include <iostream>
-#include <iomanip>
-#include <algorithm>
-#include <iterator>
 #include <random>
 #include <vector>
 #include <opencv2/core/core.hpp>
@@ -22,9 +18,7 @@ Footpath::Footpath(const cv::Matx33d& intrinsics,
                    const cv::Vec4d& distortion_coeffs, float angel)
 
     : intrinsics_(intrinsics), distortion_coeffs_(distortion_coeffs),
-      angle_(angel) {
-  //  R_cam_body_ = ypr2R(cv::Vec3d(90, 0 - 90)).t();
-}
+      angle_(angel) {}
 
 Footpath::~Footpath() = default;
 
@@ -42,9 +36,10 @@ std::vector<cv::Vec3d> Footpath::FollowPath(const cv::Mat& path_depth,
   Smooth(path_middle_lane_coords, fitting_coords);
   fitting_coords.swap(path_middle_lane_coords);
 
+  is_v_mask_exists_ = is_mask_appear(gap_mask);
   // Get the control points index
   auto control_points_index =
-      GetControlPointsIndex(path_middle_lane_coords, gap_mask).first;
+      GetControlPointsIndex(path_middle_lane_coords, gap_mask);
   if (control_points_index.empty())
     return control_poses;
 
@@ -91,19 +86,6 @@ Footpath::RowSearchingReduceMethod(const cv::Mat& img_mask) {
   return row_searching_reduce_method(img_mask);
 }
 
-cv::Vec3f
-Footpath::GetIntersectPointFromLP(const cv::Vec3f& plane_normal_vector,
-                                  const float plane_intercept,
-                                  const cv::Vec3f& point) {
-  cv::Vec3f line_normal_vector = cv::normalize(point);
-  cv::Vec3f result =
-      point - (plane_normal_vector.dot(point) + plane_intercept) /
-                  (plane_normal_vector.dot(line_normal_vector)) *
-                  line_normal_vector;
-
-  return result;
-}
-
 void Footpath::Smooth(const std::vector<cv::Point2f>& input,
                       std::vector<cv::Point2f>& output) {
   std::vector<LOESS::Point> inpoints, outpoints;
@@ -127,7 +109,7 @@ void Footpath::Smooth(const std::vector<cv::Point2f>& input,
   }
 }
 
-std::pair<std::vector<int>, cv::Point2f> Footpath::GetControlPointsIndex(
+std::vector<int> Footpath::GetControlPointsIndex(
     const std::vector<cv::Point2f>& path_middle_lane, const cv::Mat& gap_mask,
     int step) {
 
@@ -157,8 +139,8 @@ std::pair<std::vector<int>, cv::Point2f> Footpath::GetControlPointsIndex(
     //    }
     result_index.emplace_back(i);
   }
-  cv::Point2f first_control_point_coord_2d = path_middle_lane[result_index[0]];
-  return std::make_pair(result_index, first_control_point_coord_2d);
+  nearest_control_point_coord_ = path_middle_lane[result_index[0]];
+  return result_index;
 }
 
 cv::Vec3d Footpath::Rvec2ypr(const cv::Vec3d& rvec) {
@@ -210,4 +192,23 @@ cv::Matx33d Footpath::ypr2R(cv::Vec3d ypr) {
   cv::Matx33d Rx(1., 0., 0., 0., cos(r), -sin(r), 0., sin(r), cos(r));
 
   return Rz * Ry * Rx;
+}
+
+cv::Point Footpath::CalculateBottomGapMaskCenterCoord(const cv::Mat& gap_mask) {
+  std::vector<cv::Point> gap_indices;
+  cv::findNonZero(gap_mask, gap_indices);
+
+  auto H = gap_mask.rows;
+  // only select the bottom gap mask
+  auto H_thr = static_cast<int>(H * 0.75);
+
+  std::vector<cv::Point> filtered_gap_indices;
+  filtered_gap_indices.reserve(gap_indices.size()); // Optional, for efficiency
+
+  std::copy_if(gap_indices.begin(), gap_indices.end(),
+               std::back_inserter(filtered_gap_indices),
+               [H_thr](const cv::Point& point) { return point.y > H_thr; });
+
+  auto mask_center = find_gap_centorid(filtered_gap_indices);
+  return mask_center;
 }

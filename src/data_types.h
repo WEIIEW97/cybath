@@ -45,6 +45,7 @@ struct MultiLabelMaskSet {
 struct Case2Package {
   bool step_up_sign = false;
   bool step_down_sign = false;
+  bool mind_gap = false;
   std::vector<cv::Vec3d> data;
 };
 

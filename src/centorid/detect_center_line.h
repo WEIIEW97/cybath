@@ -28,7 +28,7 @@ row_searching_reduce_method(const cv::Mat& binary_mask);
 cv::Point
 find_gap_centorid(const std::shared_ptr<MultiLabelMaskSet>& label_masks);
 cv::Point find_gap_centorid(const cv::Mat& gap_mask);
-bool action_step_up(const cv::Mat& shape_v_mask);
-bool action_step_down(const cv::Mat& shape_v_mask);
+cv::Point find_gap_centorid(const std::vector<cv::Point>& gap_coords);
+bool is_mask_appear(const cv::Mat& gap_mask);
 
 #endif // CYBATHLON_DETECT_CENTER_LINE_H
