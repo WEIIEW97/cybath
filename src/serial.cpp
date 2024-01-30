@@ -201,32 +201,34 @@ Case3Package serial_navigate_by_depth_and_box_3(
                               cabin_pos[3] - cabin_trunc_y};
     cv::Rect roi(upper_left, bottom_right);
     mean_cabinet_depth = cv::mean(aligned_depth(roi))[0];
+
+    int tab_center_x = 0;
+
+    if (has_tab) {
+      int tab_trunc_x = (tab_pos[2] - tab_pos[0]) / 4;
+      int tab_trunc_y = (tab_pos[3] - tab_pos[1]) / 4;
+      cv::Point upper_left = {tab_pos[0] + tab_trunc_x, tab_pos[1] + tab_trunc_y};
+      cv::Point bottom_right = {tab_pos[2] - tab_trunc_x,
+                                tab_pos[3] - tab_trunc_y};
+      cv::Rect roi(upper_left, bottom_right);
+      mean_cabinet_depth = cv::mean(aligned_depth(roi))[0];
+      tab_center_x = (tab_pos[0] + tab_pos[2]) / 2;
+    }
+
+
+    global_mean_dpeth = mean_tab_depth > 0.f ? (mean_cabinet_depth + mean_tab_depth) / 2 : mean_cabinet_depth;
+    msg.depth = global_mean_dpeth;
+    /// very brutal and simple way to tell whether to turn left or right
+    auto cabin_center_x = (cabin_pos[0] + cabin_pos[2]) / 2;
+    auto bb_center_x = tab_center_x > 0 ? (cabin_center_x + tab_center_x) / 2 : cabin_center_x;
+
+    very_sloppy_left_right_turn_indicator(half_w, bb_center_x,
+                                          TOLERANCE_PIXEL_THR, msg.sign);
+
+    if (global_mean_dpeth <= thr) {
+      msg.sign = PositionFlag::stop;
+    }
   }
-
-  if (has_tab) {
-    int tab_trunc_x = (tab_pos[2] - tab_pos[0]) / 4;
-    int tab_trunc_y = (tab_pos[3] - tab_pos[1]) / 4;
-    cv::Point upper_left = {tab_pos[0] + tab_trunc_x, tab_pos[1] + tab_trunc_y};
-    cv::Point bottom_right = {tab_pos[2] - tab_trunc_x,
-                              tab_pos[3] - tab_trunc_y};
-    cv::Rect roi(upper_left, bottom_right);
-    mean_cabinet_depth = cv::mean(aligned_depth(roi))[0];
-  }
-
-  global_mean_dpeth = (mean_cabinet_depth + mean_tab_depth) / 2;
-  msg.depth = global_mean_dpeth;
-  /// very brutal and simple way to tell whether to turn left or right
-  auto cabin_center_x = (cabin_pos[0] + cabin_pos[2]) / 2;
-  auto tab_center_x = (tab_pos[0] + tab_pos[2]) / 2;
-  auto bb_center_x = (cabin_center_x + tab_center_x) / 2;
-
-  very_sloppy_left_right_turn_indicator(half_w, bb_center_x,
-                                        TOLERANCE_PIXEL_THR, msg.sign);
-
-  if (global_mean_dpeth <= thr) {
-    msg.sign = PositionFlag::stop;
-  }
-
   return msg;
 }
 

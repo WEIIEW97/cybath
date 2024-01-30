@@ -27,6 +27,8 @@ enum PositionFlag {
   stop = 3,
   stop_at_one = 4,
   stop_at_two = 5,
+  move_left = 6,
+  move_right = 7,
 };
 
 struct Case1Package {
@@ -50,7 +52,7 @@ struct Case2Package {
 };
 
 struct Case3Package {
-  float depth;
+  float depth = -1.0f;
   PositionFlag sign;
 };
 

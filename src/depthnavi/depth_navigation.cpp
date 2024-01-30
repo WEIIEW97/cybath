@@ -18,9 +18,9 @@
 void very_sloppy_left_right_turn_indicator(int center_x, int pos_x, int tolerance_thr,
                                            PositionFlag& flag) {
   if (pos_x > center_x + tolerance_thr) {
-    flag = PositionFlag::turn_right;
+    flag = PositionFlag::move_right;
   } else if (pos_x < center_x - tolerance_thr) {
-    flag = PositionFlag::turn_left;
+    flag = PositionFlag::move_left;
   } else {
     flag = PositionFlag::align;
   }

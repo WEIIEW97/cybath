@@ -40,7 +40,7 @@ static const std::string line_model_path =
     "end2end_ocrnet_line.onnx";
 static const std::string tablet_model_path =
     std::string(PROJECT_PATH) +
-    "/modelsyolox_s_8xb8-300e_coco_shelvetablet_0125/end2end_yolox_tablet.onnx";
+    "/models/yolox_s_8xb8-300e_coco_shelvetablet_0125/end2end_yolox_tablet.onnx";
 static const std::string coco_model_path =
     std::string(PROJECT_PATH) +
     "/models/yolox_s_8xb8-300e_coco/end2end_yolox_coco.onnx";
