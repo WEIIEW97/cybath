@@ -68,3 +68,49 @@ std::unordered_map<int, std::pair<int, int>> case1_cheat_board() {
   }
   return labeled_cheat_board;
 }
+
+std::unordered_map<int, std::pair<int, int>> case1_cheat_board_plus() {
+  std::unordered_map<int, std::pair<int, int>> labeled_cheat_board;
+  const int size = 4;
+  const int begin_board_offset = 2;
+  const int dx = 550;
+  const int dy = 550;
+  const int initial_offset_x = 1610 - 1475 + dx / 2;
+  const int initial_offset_y = 1060 + 1200 + dy / 2;
+  
+
+  // Create a 5x5 board of std::vector<std::pair<int, int>>
+  std::vector<std::vector<std::pair<int, int>>> board(
+      size, std::vector<std::pair<int, int>>(size));
+
+  for (int i = 3; i >= 0; --i) {
+    if (i == 3) {
+      board[i][begin_board_offset] =
+          std::make_pair(initial_offset_x, initial_offset_y);
+    } else {
+      board[i][begin_board_offset].first =
+          board[i + 1][begin_board_offset].first;
+      board[i][begin_board_offset].second =
+          board[i + 1][begin_board_offset].second + dy;
+    }
+
+    board[i][begin_board_offset+1].first = board[i][begin_board_offset].first + dx; 
+    board[i][begin_board_offset+1].second = board[i][begin_board_offset].second; 
+
+    for (int j = 1; j < 3; ++j) {
+      board[i][begin_board_offset - j].first =
+          board[i][begin_board_offset - j + 1].first - dx;
+      board[i][begin_board_offset - j].second =
+          board[i][begin_board_offset - j + 1].second;
+    }
+  }
+
+  int begin_index = 26+16-1;
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      labeled_cheat_board[begin_index] = board[i][j];
+      begin_index--;
+    }
+  }
+  return labeled_cheat_board;
+}

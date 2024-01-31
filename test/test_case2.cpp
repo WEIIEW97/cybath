@@ -23,7 +23,7 @@ cv::Matx33d intrinsics{381.7600630735221,
                        1};
 cv::Vec4d distortion_coeffs{-0.04442904360733734, 0.037326194718717384,
                             7.758816931839537e-06, 0.0005847117569966644};
-float camera_angle = -40;
+float camera_angle = -45;
 const float indicate_thr1 = 0.85f;
 const float indicate_thr2 = 0.55f;
 const float indicate_thr3 = 0.55f;
@@ -31,13 +31,31 @@ const float indicate_thr3 = 0.55f;
 /// TODO: optimize this class call, avoid call to construct in every loop
 Footpath footpath(intrinsics, distortion_coeffs, camera_angle);
 
+int extractNumber(const std::string& filename) {
+  std::size_t pos = filename.find("rgb_");
+  if (pos != std::string::npos) {
+    pos += 4; // "rgb_" has 4 characters, so we move the position past it
+    std::size_t start = pos;
+    // Find the end of the number
+    while (pos < filename.length() && std::isdigit(filename[pos])) {
+      pos++;
+    }
+    return std::stoi(filename.substr(start, pos - start));
+  }
+  return -1; // Return -1 or an appropriate value if "rgb_" is not found
+}
+
+bool customSort(const std::string& a, const std::string& b) {
+  return extractNumber(a) < extractNumber(b);
+}
+
 int main(int, char**) {
   using namespace std::chrono;
   auto last_time = high_resolution_clock::now();
 //  std::string root_path = "/home/nvp/data/VIS/footpath_test3_data/color";
 //  std::string depth_path = "/home/nvp/data/VIS/footpath_test3_data/aligned_depth_to_color";
-    std::string root_path = "/home/william/data/cybathlon/footpath_test3_data/color";
-    std::string depth_path = "/home/william/data/cybathlon/footpath_test3_data/aligned_depth_to_color";
+    std::string root_path = "/home/william/data/cybathlon/weiwei0130/rgb";
+    std::string depth_path = "/home/william/data/cybathlon/weiwei0130/depth";
 
 
 //  auto gpu_carrier = initialize_gpu(road_onnx_model_path, line_onnx_model_path);
@@ -55,10 +73,13 @@ int main(int, char**) {
     all_depth_paths.emplace_back(entry.path());
   }
 
-  sort(all_image_paths.begin(), all_image_paths.end(),
-       [](const string& a, const string& b) { return a < b; });
-  sort(all_depth_paths.begin(), all_depth_paths.end(),
-       [](const string& a, const string& b) { return a < b; });
+//  sort(all_image_paths.begin(), all_image_paths.end(),
+//       [](const string& a, const string& b) { return a < b; });
+//  sort(all_depth_paths.begin(), all_depth_paths.end(),
+//       [](const string& a, const string& b) { return a < b; });
+
+  sort(all_image_paths.begin(), all_image_paths.end(), customSort);
+  sort(all_depth_paths.begin(), all_depth_paths.end(), customSort);
 
   cv::Mat path_seg;
   bool has_shoe = false;
@@ -74,9 +95,8 @@ int main(int, char**) {
     cv::imshow("rgb input", rgb);
     cv::imshow("v mask", multi_label_masks->shape_v_lane);
     cv::imshow("gap mask", multi_label_masks->gap_lane);
-    if (cv::waitKey(30) >= 0) {
-      break; // Exit the loop if a key is pressed
-    }
+    cv::imshow("road mask", multi_label_masks->road_lane);
+
     // auto start_line_flag = serial_start_line_detect(multi_label_masks);
     auto case2_package = serial_center_line_detect(multi_label_masks, footpath, depth, indicate_thr1, indicate_thr2, indicate_thr3);
     duration<double> elapsed_seconds = curr_time - last_time;
@@ -85,6 +105,10 @@ int main(int, char**) {
     auto step_down_sign = case2_package.step_down_sign ? "step down!" : "not ready";
     auto mind_gap_sign = case2_package.mind_gap ? "watch out!" : "not ready";
 
+    cv::imshow("depth", depth);
+    if (cv::waitKey(5) >= 0) {
+      break; // Exit the loop if a key is pressed
+    }
     cout << "begin frame: " << i << "\n";
     if (!case2_package.data.empty()) {
       cout << all_image_paths[i] << "\n";

@@ -21,10 +21,12 @@
 #include "data_types.h"
 #include <memory>
 
+#if 0
 ortPathSegGPU* initialize_gpu(const std::string& road_onnx_model_path,
                               const std::string& line_onnx_model_path);
 
 cv::Mat onnx_path_seg(const cv::Mat& frame, ortPathSegGPU* stream);
+#endif
 
 void get_labeled_masks_from_onnx(
     const cv::Mat& onnx_seg_result,
@@ -52,4 +54,6 @@ Case3Package serial_navigate_by_depth_and_box_4(bool has_cabinet,
 bool whether_to_begin_construction(
     const std::shared_ptr<MultiLabelMaskSet>& label_masks);
 
+#if 0
 void delete_gpu(ortPathSegGPU* GPU);
+#endif

@@ -29,7 +29,8 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 add_executable(${PROJECT_NAME} 
-        test/test_case4.cpp
+         test/test_case2.cpp
+#        main.cpp
         ${sources}
 )
 

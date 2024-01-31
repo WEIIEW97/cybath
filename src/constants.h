@@ -25,6 +25,7 @@
 
 void print_board(const std::unordered_map<int, std::pair<int, int>>& board);
 std::unordered_map<int, std::pair<int, int>> case1_cheat_board();
+std::unordered_map<int, std::pair<int, int>> case1_cheat_board_plus();
 
 static const std::string border_model_path =
     std::string(PROJECT_PATH) +

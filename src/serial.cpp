@@ -116,6 +116,8 @@ serial_center_line_detect(std::shared_ptr<MultiLabelMaskSet>& label_masks,
 
   auto control_poses =
       footpath.FollowPath(correspond_depth, mask, label_masks->gap_lane);
+  
+  if (control_poses.empty()) return msg;
 
   auto nearest_point = footpath.nearest_control_point_coord_;
 #ifdef DEBUG
