@@ -486,7 +486,6 @@ int OnnxRuntimeEngine::drawboxsave(Mat& src, int x1, int y1, int x2, int y2,
   cv::Point pt1(x1, y1);
   cv::Point pt2(x2, y2);
 
-  // 画框
   cv::rectangle(src, pt1, pt2, color, 2);
 
   return ONNXRUNTIMEENGINE_SUCCESS;

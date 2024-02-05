@@ -22,7 +22,8 @@ row_searching_reduce_method(const cv::Mat& binary_mask) {
 
   middle_lane_coords.reserve(h);
 
-#pragma omp parallel for
+/// disable omp for causing the order vague
+// #pragma omp parallel for
   for (int i = 0; i < h; i++) {
     auto row = binary_mask.row(i);
     auto count = cv::countNonZero(row);

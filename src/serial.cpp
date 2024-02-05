@@ -243,7 +243,8 @@ Case3Package serial_navigate_by_depth_and_box_4(bool has_cabinet,
   float sigma = 30;
   uint8_t black_thr = 50;
   int TOLERANCE_PIXEL_THR = 20;
-  int three_quarters_w = aligned_depth.cols / 4 * 3;
+  // int three_quarters_w = aligned_depth.cols / 4 * 3;
+  int half_w = aligned_depth / 2;
 
   float distance = 0.f;
 
@@ -268,7 +269,7 @@ Case3Package serial_navigate_by_depth_and_box_4(bool has_cabinet,
       msg.sign = PositionFlag::stop_at_two;
 
     auto position_x = (position[0] + position[2]) / 2;
-    very_sloppy_left_right_turn_indicator(three_quarters_w, position_x,
+    very_sloppy_left_right_turn_indicator(half_w, position_x,
                                           TOLERANCE_PIXEL_THR, msg.sign);
     msg.depth = distance;
   }
