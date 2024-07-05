@@ -137,7 +137,7 @@ occupancy_grid = create_occupancy_grid(size)
 ensure_path(occupancy_grid, start, goal)
 
 # Generate 25 evenly distributed points
-points = generate_evenly_distributed_points(size, 25)
+points = generate_evenly_distributed_points(size, 50)
 
 # Evaluate the points to find the best exit point
 best_exit_point, path_length = evaluate_exit_points(occupancy_grid, start, points)
